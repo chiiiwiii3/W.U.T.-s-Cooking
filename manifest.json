@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#151316",
   "theme_color": "#151316",
-  "description": "Personalized meal planning and recipes from W.U.T. \u2014 What's Ur Type?",
+  "description": "What's Ur Type? Personalized meal prep and recipes.",
   "icons": [
     {
       "src": "icons/icon-192.png",
