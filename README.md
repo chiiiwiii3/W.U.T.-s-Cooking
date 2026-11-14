@@ -1,23 +1,31 @@
 # W.U.T.'s Cooking
 
-**W.U.T. = What’s Ur Type?**
+**W.U.T. = What's Ur Type?**
 
-Mobile-first personalized meal-prep and recipe PWA.
+A mobile-first meal-prep and recipe app (installable PWA). Tell it about yourself and your goals, and it builds a breakfast / lunch / dinner plan for a day, a week, a month or any number of days, with recipes, storage tips and a shopping list.
 
-## Starter features
-- Profile onboarding
-- Blood type + optional Blood Type Diet framework
-- Vegan, vegetarian, pescatarian, omnivore, keto, paleo, Mediterranean
-- Allergy filtering
-- Goals and calorie/macronutrient targets
-- 1/3/7/14/30-day meal plans
-- Breakfast, lunch and dinner
-- Recipes, favorites and custom recipes
-- Shopping list
-- PWA install support
-- W.U.T.'s Cooking icon and branding
+## Features
+- **4 skippable setup screens** (each with Back and Skip): profile, food profile, goals, optional nutrition targets
+- **Profile:** name, age, sex, height, weight (US or metric), ethnicity, blood type (dropdown incl. "I'm not sure"), allergies, diet, health conditions
+- **18 diet options** including "I'm not sure", vegan, vegetarian, pescatarian, keto, paleo, Mediterranean, gluten-free, dairy-free, halal, kosher and **Blood type diet**
+- **Allergies are always a hard rule.** Pick from the list or type your own (e.g. kiwi)
+- **Goals:** lose / gain / build muscle / maintain, vitamin & mineral boosts, beauty (skin, hair, nails), wellness
+- **Nutrition targets are optional.** Leave calories, protein, carbs and fat blank and they're estimated from your profile; portions are sized to hit the target
+- **Home:** meal of the day with calories, protein, carbs, fat, fiber and vitamin/mineral highlights; **Ate it** and **Add to favorites** buttons; today's intake ring; **Previous intake** log; **New plan** dropdown (1 day to 2 months, or custom days); **Add to Home Screen**
+- **Recipes tab:** only your favorites and recipes you've added; add your own recipes
+- **Recipe pages:** scaled ingredient amounts, step-by-step cooking, fridge/freezer storage and reheating
+- **Shopping list:** for a day, a week or 2 weeks, with how much to buy and what kind, grouped by store section, with check-offs and copy-to-clipboard
+
+## How it works
+- `data.js`: ingredient catalog (nutrition, allergens, buying tips) and 27 recipes built from it
+- `engine.js`: nutrition math, allergy/diet filtering, plan generation, shopping lists (no DOM code)
+- `app.js`: the interface
+- Everything is saved on the device in `localStorage`. There's no server and no account.
+
+Calories, macros and vitamins are computed from the ingredient list, so they are approximate. This is general food inspiration, not medical advice. The blood type diet is a popular idea without strong scientific support, so it is only used as a soft preference.
 
 ## GitHub Pages
-Upload the files in this folder to a GitHub repository. Then use **Settings → Pages → Deploy from a branch → main → /(root)**.
+**Settings → Pages → Deploy from a branch → main → /(root)**. Installing to the Home Screen needs the https address GitHub Pages provides.
 
-The advanced AI/nutrition backend can be added later. Never put private AI API keys in the front-end.
+## Developing
+Open `index.html` through any static server (e.g. `npx http-server`). A service worker caches the files for offline use. It fetches fresh files first, so changes show up on reload.

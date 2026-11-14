@@ -1,24 +1,17 @@
 {
   "name": "W.U.T.'s Cooking",
   "short_name": "W.U.T.'s Cooking",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#151316",
   "theme_color": "#151316",
-  "description": "What's Ur Type? Personalized meal prep and recipes.",
+  "description": "What's Ur Type? Personalized meal prep, recipes and shopping lists.",
+  "categories": ["food", "health", "lifestyle"],
   "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }

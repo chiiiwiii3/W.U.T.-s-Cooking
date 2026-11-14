@@ -1,0 +1,374 @@
+/* W.U.T.'s Cooking — the "brain": nutrition math, allergy/diet filtering,
+   meal-plan generation and shopping lists. No DOM code in here, so it can be tested in Node. */
+(function (root) {
+  "use strict";
+  const W = root.WUT;
+  const { ING, RECIPES, BLOOD_RULES, MICRO_LABELS, CATS } = W;
+
+  // ---------- small helpers ----------
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  function daysBetween(a, b) {
+    const pa = a.split("-").map(Number), pb = b.split("-").map(Number);
+    return Math.round((Date.UTC(pb[0], pb[1] - 1, pb[2]) - Date.UTC(pa[0], pa[1] - 1, pa[2])) / 86400000);
+  }
+
+  // ---------- nutrition ----------
+  function sumNutrition(lines) {
+    const t = { cal: 0, p: 0, c: 0, f: 0, fi: 0, mi: {} };
+    for (const [id, amt] of lines) {
+      const g = ING[id];
+      const k = g.u === "ea" ? amt : amt / 100;
+      t.cal += g.per[0] * k; t.p += g.per[1] * k; t.c += g.per[2] * k; t.f += g.per[3] * k; t.fi += g.per[4] * k;
+      for (const m in g.mi) t.mi[m] = (t.mi[m] || 0) + g.mi[m] * k;
+    }
+    return t;
+  }
+
+  // Pre-compute tags for every built-in recipe.
+  for (const r of RECIPES) {
+    const gs = r.ing.map(([id]) => ING[id]);
+    const has = (t) => gs.some((g) => g.t === t);
+    const meat = has("meat"), fish = has("fish"), shell = has("shellfish"), dairy = has("dairy"), egg = has("egg");
+    r.allergens = [...new Set(gs.flatMap((g) => g.a || []))];
+    r.base = sumNutrition(r.ing);
+    r.net = r.base.c - r.base.fi;
+    r.ids = r.ing.map((x) => x[0]);
+    r.o3 = gs.some((g) => g.o3);
+    r.aiCount = gs.filter((g) => g.ai).length;
+    r.tags = {
+      vegan: !(meat || fish || shell || dairy || egg),
+      vegetarian: !(meat || fish || shell),
+      pescatarian: !meat,
+      red: gs.some((g) => g.red),
+      paleo: !gs.some((g) => g.np),
+      gf: !r.allergens.includes("gluten"),
+      df: !r.allergens.includes("dairy"),
+      kosher: !shell && !(meat && dairy),
+      wholefoods: !gs.some((g) => g.proc),
+      keto: r.net <= 12,
+      lowcarb: r.net <= 25
+    };
+  }
+  const RECIPE_MAP = Object.fromEntries(RECIPES.map((r) => [r.id, r]));
+
+  function recipeById(id, st) {
+    return RECIPE_MAP[id] || ((st && st.myRecipes) || []).find((x) => x.id === id) || null;
+  }
+  // Nutrition for a recipe at a portion size (user recipes only know what the user typed).
+  function nutr(r, portion = 1) {
+    if (r.user) {
+      const n = r.nut || {};
+      const known = !!(n.cal || n.p || n.c || n.f);
+      return { cal: (n.cal || 0) * portion, p: (n.p || 0) * portion, c: (n.c || 0) * portion, f: (n.f || 0) * portion, fi: 0, mi: {}, known };
+    }
+    const b = r.base, mi = {};
+    for (const m in b.mi) mi[m] = b.mi[m] * portion;
+    return { cal: b.cal * portion, p: b.p * portion, c: b.c * portion, f: b.f * portion, fi: b.fi * portion, mi, known: true };
+  }
+  function richIn(n, max = 3) {
+    return Object.entries(n.mi)
+      .filter(([, v]) => v >= 20)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, max)
+      .map(([k, v]) => ({ k, label: MICRO_LABELS[k], pct: Math.round(v) }));
+  }
+
+  // ---------- allergies (always a HARD filter) ----------
+  function allergyTerms(raw) {
+    const a = String(raw || "").toLowerCase().trim();
+    const cats = new Set();
+    if (/peanut|groundnut/.test(a)) cats.add("peanuts");
+    if (/tree\s*nut|almond|walnut|cashew|pecan|pistachio|hazelnut|macadamia/.test(a)) cats.add("tree nuts");
+    if (/^nuts?$/.test(a)) { cats.add("tree nuts"); cats.add("peanuts"); }
+    if (/dairy|milk|lactose|cheese|yogurt|yoghurt|whey|casein/.test(a)) cats.add("dairy");
+    if (/\begg/.test(a)) cats.add("eggs");
+    if (/\bfish\b|salmon|\bcod\b|tuna|anchov|sardine|tilapia|halibut/.test(a)) cats.add("fish");
+    if (/shellfish|shrimp|prawn|crab|lobster|crustacean|mollus|clam|oyster|mussel|scallop/.test(a)) cats.add("shellfish");
+    if (/\bsoy|soya|edamame|tofu/.test(a)) cats.add("soy");
+    if (/gluten|wheat|celiac|coeliac|barley|\brye\b/.test(a)) cats.add("gluten");
+    if (/sesame|tahini/.test(a)) cats.add("sesame");
+    const words = new Set();
+    if (a.length >= 3) {
+      words.add(a);
+      words.add(a.replace(/ies$/, "y"));
+      words.add(a.replace(/es$/, ""));
+      words.add(a.replace(/s$/, ""));
+    }
+    return { cats, words: [...words].filter((w) => w.length >= 3) };
+  }
+  function allergyHits(r, allergies) {
+    const hits = [];
+    const names = r.user ? (r.ingLines || []).map((s) => s.toLowerCase()) : r.ing.map(([id]) => ING[id].n.toLowerCase());
+    for (const raw of allergies || []) {
+      if (!String(raw).trim() || /^(none|no|n\/a)$/i.test(String(raw).trim())) continue;
+      const { cats, words } = allergyTerms(raw);
+      let hit = false;
+      if (!r.user) for (const c of cats) if (r.allergens.includes(c)) hit = true;
+      if (!hit) hit = words.some((w) => names.some((n) => n.includes(w)));
+      if (hit) hits.push(raw);
+    }
+    return hits;
+  }
+
+  // ---------- diets (HARD rules; blood type + goals are soft) ----------
+  function dietAllows(r, diet) {
+    const t = r.tags;
+    switch (diet) {
+      case "vegan": return t.vegan;
+      case "vegetarian": return t.vegetarian;
+      case "pescatarian": return t.pescatarian;
+      case "keto": return t.keto;
+      case "lowcarb": return t.lowcarb;
+      case "paleo": return t.paleo;
+      case "glutenfree": return t.gf;
+      case "dairyfree": return t.df;
+      case "kosher": return t.kosher;
+      case "mediterranean": return !t.red;
+      case "wholefoods": return t.wholefoods;
+      default: return true;
+    }
+  }
+  const abo = (bt) => String(bt || "").replace(/[+-]/g, "");
+
+  // ---------- targets ----------
+  function toMetric(pr) {
+    const w = parseFloat(pr.weight);
+    let kg = NaN, cm = NaN;
+    if (pr.units === "metric") { kg = w; cm = parseFloat(pr.heightCm); }
+    else {
+      kg = w * 0.45359237;
+      const ft = parseFloat(pr.heightFt) || 0, inch = parseFloat(pr.heightIn) || 0;
+      cm = ft || inch ? (ft * 12 + inch) * 2.54 : NaN;
+    }
+    return { kg, cm };
+  }
+  function estimateCalories(st) {
+    const pr = st.profile, age = parseFloat(pr.age), { kg, cm } = toMetric(pr);
+    const body = st.goals.body;
+    const notes = [];
+    if (!(age >= 18 && age <= 100)) {
+      if (age < 18) notes.push("Calorie targets aren't tuned for under 18, so we used a general 2,000 kcal. Check with a doctor or dietitian.");
+      return { cal: 2000, estimated: false, notes };
+    }
+    if (!(kg >= 30 && kg <= 300 && cm >= 120 && cm <= 230)) return { cal: 2000, estimated: false, notes };
+    const sexAdj = pr.sex === "male" ? 5 : pr.sex === "female" ? -161 : -78;
+    const bmr = 10 * kg + 6.25 * cm - 5 * age + sexAdj;
+    let cal = bmr * 1.4; // light-to-moderate activity
+    if (body === "lose") cal -= 400;
+    else if (body === "gain") cal += 350;
+    else if (body === "muscle") cal += 250;
+    cal = Math.max(1200, Math.round(cal / 10) * 10);
+    return { cal, estimated: true, notes };
+  }
+  function resolveTargets(st) {
+    const tg = st.targets || {};
+    const num = (v) => { const n = parseFloat(v); return n > 0 ? n : NaN; };
+    const est = estimateCalories(st);
+    const diet = st.profile.diet, body = st.goals.body;
+    let cal = num(tg.cal);
+    const userCal = cal > 0;
+    if (!userCal) cal = est.cal;
+    let ratio = { p: 0.2, c: 0.45, f: 0.35 };
+    if (body === "muscle" || body === "gain") ratio = { p: 0.25, c: 0.45, f: 0.3 };
+    if (body === "lose") ratio = { p: 0.28, c: 0.37, f: 0.35 };
+    if (diet === "highprotein") ratio = { p: 0.33, c: 0.37, f: 0.3 };
+    if (diet === "lowcarb") ratio = { p: 0.3, c: 0.25, f: 0.45 };
+    if (diet === "keto") ratio = { p: 0.22, c: 0.06, f: 0.72 };
+    const out = {
+      cal: Math.round(cal),
+      p: Math.round(num(tg.p) || (cal * ratio.p) / 4),
+      c: Math.round(num(tg.c) || (cal * ratio.c) / 4),
+      f: Math.round(num(tg.f) || (cal * ratio.f) / 9),
+      auto: { cal: !userCal, p: !(num(tg.p) > 0), c: !(num(tg.c) > 0), f: !(num(tg.f) > 0) },
+      estimated: !userCal && est.estimated,
+      notes: [...est.notes]
+    };
+    if (out.cal < 1200) out.notes.push("Targets under 1,200 kcal a day should only be followed with a doctor or dietitian.");
+    return out;
+  }
+
+  // ---------- scoring (soft preferences) ----------
+  function goalWeights(st) {
+    const g = st.goals, w = { micro: {}, fiber: 0, protein: 0, o3: 0, netcarb: 0 };
+    const add = (k, v) => { w.micro[k] = (w.micro[k] || 0) + v; };
+    g.micros.forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
+    g.beauty.forEach((b) => {
+      if (b === "skin") { add("C", 1); add("A", 1); w.o3 += 1; }
+      if (b === "hair") { add("Fe", 1); add("B12", 1); w.protein += 0.5; }
+      if (b === "nails") { add("Mg", 1); add("Ca", 1); w.protein += 0.5; }
+    });
+    g.wellness.forEach((x) => {
+      if (x === "energy") { add("B12", 1); add("Fe", 1); add("Mg", 1); }
+      if (x === "digestion") w.fiber += 0.5;
+      if (x === "heart") { add("K", 1); add("Mg", 1); w.fiber += 0.3; w.o3 += 1; }
+      if (x === "bones") { add("Ca", 1.5); add("D", 1); add("Mg", 1); }
+    });
+    for (const c of st.profile.conditions || []) {
+      const s = c.toLowerCase();
+      if (s.includes("diabetes")) { w.fiber += 0.4; w.netcarb += 0.08; }
+      if (s.includes("blood pressure")) { add("K", 1); add("Mg", 1); }
+      if (s.includes("cholesterol")) { w.fiber += 0.4; w.o3 += 1; }
+      if (s.includes("iron")) add("Fe", 2);
+    }
+    if (g.body === "lose") { w.fiber += 0.3; w.protein += 0.4; }
+    if (g.body === "muscle" || g.body === "gain") w.protein += 0.8;
+    return w;
+  }
+  const SHARE = { Breakfast: 0.25, Lunch: 0.35, Dinner: 0.4 };
+  function portionFor(r, T, slot) {
+    return clamp(Math.round(((T.cal * SHARE[slot]) / r.base.cal) * 4) / 4, 0.5, 2.5);
+  }
+  function scoreRecipe(r, st, T, slot, W_) {
+    const portion = portionFor(r, T, slot);
+    const n = nutr(r, portion);
+    let s = 0;
+    // match macro balance to targets
+    const tp = (T.p * 4) / T.cal, tc = (T.c * 4) / T.cal, tf = (T.f * 9) / T.cal;
+    const rp = (n.p * 4) / n.cal, rc = (n.c * 4) / n.cal, rf = (n.f * 9) / n.cal;
+    s -= 12 * (Math.abs(rp - tp) + Math.abs(rc - tc) + Math.abs(rf - tf));
+    for (const m in W_.micro) s += W_.micro[m] * Math.min(3, (n.mi[m] || 0) / 15);
+    s += n.fi * W_.fiber * 0.4 + n.p * W_.protein * 0.1 + (r.o3 ? W_.o3 * 1.5 : 0);
+    s -= Math.max(0, r.net - 20) * W_.netcarb;
+    const diet = st.profile.diet;
+    if (diet === "flexitarian" && r.tags.vegetarian) s += 3;
+    if (diet === "highprotein") s += n.p * 0.1;
+    if (diet === "antiinflam") s += Math.min(6, r.aiCount * 1.5) + (r.o3 ? 2 : 0);
+    if (diet === "mediterranean") {
+      if (r.ids.includes("salmon") || r.ids.includes("cod") || r.ids.includes("tuna")) s += 2;
+      if (r.ids.some((i) => ["lentils", "chickpeas", "blackbeans"].includes(i))) s += 1.5;
+      if (r.ids.includes("oliveoil")) s += 1;
+    }
+    if (diet === "bloodtype") {
+      const rule = BLOOD_RULES[abo(st.profile.bloodType)];
+      if (rule) {
+        s += 2 * r.ids.filter((i) => rule.prefer.includes(i)).length;
+        s -= 7 * r.ids.filter((i) => rule.avoid.includes(i)).length;
+      }
+    }
+    return s;
+  }
+
+  // ---------- plan generation ----------
+  function recipeAllowed(r, st) {
+    return dietAllows(r, st.profile.diet) && allergyHits(r, st.profile.allergies).length === 0;
+  }
+  function generatePlan(st, opts = {}) {
+    const days = clamp(Math.round(st.planLen || 7), 1, 60);
+    const seed = opts.seed != null ? opts.seed : (Date.now() ^ ((Math.random() * 1e9) | 0)) & 0x7fffffff;
+    const rnd = mulberry32(seed);
+    const T = resolveTargets(st), W_ = goalWeights(st);
+    const slots = ["Breakfast", "Lunch", "Dinner"];
+    const pools = {};
+    for (const slot of slots) pools[slot] = RECIPES.filter((r) => r.meal === slot && recipeAllowed(r, st));
+    const used = { Breakfast: {}, Lunch: {}, Dinner: {} };
+    const items = [], missing = [];
+    for (const slot of slots) if (!pools[slot].length) missing.push(slot);
+    for (let d = 0; d < days; d++) {
+      for (const slot of slots) {
+        const pool = pools[slot];
+        if (!pool.length) continue;
+        let best = null, bestScore = -Infinity;
+        for (const r of pool) {
+          const last = used[slot][r.id];
+          const gap = last === undefined ? 99 : d - last;
+          const s = scoreRecipe(r, st, T, slot, W_) - Math.max(0, 4 - gap) * 4 + rnd() * 1.5;
+          if (s > bestScore) { bestScore = s; best = r; }
+        }
+        used[slot][best.id] = d;
+        items.push({ day: d, slot, rid: best.id, portion: portionFor(best, T, slot) });
+      }
+    }
+    return { id: "p" + seed, seed, start: ymd(opts.now || new Date()), days, items, missing };
+  }
+  // Where are we in the plan today?
+  function planPosition(plan, now) {
+    const d = daysBetween(plan.start, ymd(now || new Date()));
+    return { offset: d, over: d >= plan.days, idx: ((d % plan.days) + plan.days) % plan.days };
+  }
+
+  // ---------- quantity formatting ----------
+  function fmtFrac(x) {
+    const q = Math.max(0.25, Math.round(x * 4) / 4);
+    const whole = Math.floor(q), f = q - whole;
+    const sym = { 0: "", 0.25: "¼", 0.5: "½", 0.75: "¾" }[f];
+    return (whole ? String(whole) : "") + (whole && sym ? " " : "") + sym;
+  }
+  function fmtG(g) {
+    const r = g < 20 ? Math.max(1, Math.round(g)) : g < 100 ? Math.round(g / 5) * 5 : Math.round(g / 10) * 10;
+    if (r >= 450) return `${r} g (≈ ${(r / 454).toFixed(1).replace(/\.0$/, "")} lb)`;
+    if (r >= 60) return `${r} g (≈ ${Math.round(r / 28.35)} oz)`;
+    return `${r} g`;
+  }
+  function fmtMl(ml) {
+    if (ml >= 120) { const cups = ml / 240; return `${Math.round(ml / 10) * 10} ml (≈ ${fmtFrac(cups)} cup${cups > 1.1 ? "s" : ""})`; }
+    if (ml >= 15) return `${Math.round(ml)} ml (≈ ${fmtFrac(ml / 15)} tbsp)`;
+    return `${Math.max(1, Math.round(ml))} ml (≈ ${fmtFrac(ml / 5)} tsp)`;
+  }
+  const plural = (label, n) => (n > 1 ? (label === "dozen" ? "dozen" : label + "s") : label);
+  // Line for a recipe: {qty, label}
+  function fmtRecipeLine(id, amt) {
+    const g = ING[id];
+    if (g.u === "ea") return { qty: `${fmtFrac(amt)} ${amt <= 1 ? g.ea[0] : g.ea[1]}`, label: "" };
+    return { qty: g.u === "g" ? fmtG(amt) : fmtMl(amt), label: g.n };
+  }
+  // Text for the shopping list: what to get
+  function fmtShopQty(id, amt) {
+    const g = ING[id];
+    if (g.u === "ea") {
+      const n = Math.max(1, Math.ceil(amt - 1e-9));
+      let s = `${n} ${n === 1 ? g.ea[0] : g.ea[1]}`;
+      if (g.pack) { const packs = Math.ceil(n / g.pack.size); s += ` (buy ${packs} ${plural(g.pack.label, packs)})`; }
+      return s;
+    }
+    return g.u === "g" ? fmtG(amt) : fmtMl(amt);
+  }
+
+  // ---------- shopping list ----------
+  function shoppingList(st, windowDays, now) {
+    const plan = st.plan;
+    if (!plan || !plan.items.length) return { groups: [], pantry: [], count: 0, days: windowDays, planDays: 0, repeats: false };
+    const { idx } = planPosition(plan, now);
+    const byDay = {};
+    for (const it of plan.items) (byDay[it.day] = byDay[it.day] || []).push(it);
+    const totals = {}, pantry = new Set();
+    for (let i = 0; i < windowDays; i++) {
+      for (const it of byDay[(idx + i) % plan.days] || []) {
+        const r = recipeById(it.rid, st);
+        if (!r || r.user) continue;
+        for (const [id, amt] of r.ing) {
+          const t = (totals[id] = totals[id] || { amt: 0, uses: new Set() });
+          t.amt += amt * it.portion;
+          t.uses.add(r.name);
+        }
+        (r.pantry || []).forEach((p) => pantry.add(p));
+      }
+    }
+    const groups = CATS.map((cat) => ({
+      cat,
+      items: Object.entries(totals)
+        .filter(([id]) => ING[id].cat === cat)
+        .map(([id, t]) => ({ id, name: ING[id].n, qty: fmtShopQty(id, t.amt), buy: ING[id].buy, uses: [...t.uses] }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    })).filter((g) => g.items.length);
+    return {
+      groups, pantry: [...pantry].sort(), count: groups.reduce((n, g) => n + g.items.length, 0),
+      days: windowDays, planDays: plan.days, repeats: windowDays > plan.days
+    };
+  }
+
+  Object.assign(W, {
+    clamp, ymd, daysBetween, recipeById, nutr, richIn, allergyHits, dietAllows, recipeAllowed,
+    resolveTargets, generatePlan, planPosition, shoppingList, fmtFrac, fmtG, fmtMl,
+    fmtRecipeLine, fmtShopQty, goalWeights, abo
+  });
+})(globalThis);
