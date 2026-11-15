@@ -29,7 +29,9 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 .hero h1.small { font-size: 26px; }
 .hero p { margin: 4px 0 0; color: var(--muted); }
 .eyebrow { text-transform: uppercase; letter-spacing: 1.8px; color: var(--gold); font-size: 11px; font-weight: 700; }
-.mascot { font-size: 54px; display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+.mascot { position: absolute; right: 0; top: 14px; width: 96px; height: auto; background: #fff; border: 3px solid var(--gold); border-radius: 26px; padding: 4px; transform: rotate(4deg); box-shadow: 0 5px 0 var(--gold-d), 0 12px 28px #0006; animation: bob 2.8s ease-in-out infinite; }
+.hero.hasmascot { padding-right: 112px; min-height: 190px; }
+.emptyimg { display: block; margin: 0 auto 10px; width: 110px; height: auto; background: #fff; border: 3px solid var(--gold); border-radius: 26px; padding: 4px; transform: rotate(-3deg); box-shadow: 0 5px 0 var(--gold-d); }
 .bigemoji { font-size: 56px; text-align: center; animation: bob 2.8s ease-in-out infinite; }
 .hero .bigemoji { text-align: left; }
 

@@ -135,7 +135,7 @@
     const n = state.step, i = STEP_INFO[n];
     return `<div class="page">
       <div class="steps" aria-label="Step ${n} of 4">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>
-      <div class="hero"><div class="mascot" aria-hidden="true">🧑‍🍳</div><div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
+      <div class="hero hasmascot"><img class="mascot" src="icons/wut-squirrel.webp" alt="W.U.T.'s chef squirrel" width="96" height="143"><div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
       <div class="card">${i.b()}</div>
       <button class="btn" data-act="next">${n === 4 ? "✨ Create my meal prep" : "Continue →"}</button>
       <div class="row2">${n > 1 ? `<button class="btn ghost" data-act="back">← Back</button>` : "<span></span>"}<button class="btn ghost" data-act="skip">Skip</button></div>
@@ -186,7 +186,7 @@
     const bar = (label, v, t) => `<div class="bar"><div class="barhead"><span>${label}</span><span>${Math.round(v)} / ${t} g</span></div><div class="track"><i style="width:${Math.min(100, (v / t) * 100)}%"></i></div></div>`;
     const done = isInstalled();
     return `<div class="page">
-      <div class="hero"><div class="eyebrow">Meal of the day · ${esc(dateLabel(today()))}</div><h1>Good ${greet}, ${esc(state.profile.name || "friend")}!</h1>
+      <div class="hero hasmascot"><img class="mascot" src="icons/wut-squirrel.webp" alt="W.U.T.'s chef squirrel" width="96" height="143"><div class="eyebrow">Meal of the day · ${esc(dateLabel(today()))}</div><h1>Good ${greet}, ${esc(state.profile.name || "friend")}!</h1>
       <p>Day ${pos.idx + 1} of your ${plan.days}-day meal prep.</p></div>
       ${pos.over ? `<div class="note">Your ${plan.days}-day plan has finished, so we're repeating it. Tap <b>New plan</b> below for fresh meals.</div>` : ""}
       ${missingNotes()}
@@ -256,7 +256,7 @@
     return `<div class="page"><div class="hero"><div class="eyebrow">Kitchen</div><h1>My Recipes</h1><p>Your favorites and the recipes you've added.</p></div>
       <button class="btn" data-act="go" data-arg="add">＋ Add my recipe</button>
       <div class="chips pad">${chip(`All saved`, f === "all", "filter", "all")}${chip(`Favorites (${favs.length})`, f === "fav", "filter", "fav")}${chip(`Mine (${mine.length})`, f === "mine", "filter", "mine")}</div>
-      ${cards || `<div class="empty card"><div class="bigemoji">🍽️</div><p>${empty}</p></div>`}</div>`;
+      ${cards || `<div class="empty card"><img class="emptyimg" src="icons/wut-squirrel.webp" alt="" width="110" height="164"><p>${empty}</p></div>`}</div>`;
   }
 
   function addScreen() {
@@ -313,7 +313,7 @@
         ${S.pantry.length ? `<div class="card"><h3>🧂 Check your pantry</h3><p class="muted">Not counted above. You'll likely need small amounts of: ${esc(S.pantry.join(", "))}, plus salt and pepper.</p></div>` : ""}
         <p class="fine">Amounts are raw or dry weights as you buy them. Cooked rice, quinoa and lentils weigh more.</p>
         <button class="btn" data-act="shopcopy">📋 Copy list</button><button class="btn ghost" data-act="shopclear">Clear checkmarks</button>`
-        : `<div class="empty card"><div class="bigemoji">🛒</div><p>No meals to shop for yet. Make a plan first.</p></div>`}</div>`;
+        : `<div class="empty card"><img class="emptyimg" src="icons/wut-squirrel.webp" alt="" width="110" height="164"><p>No meals to shop for yet. Make a plan first.</p></div>`}</div>`;
   }
 
   function profile() {
