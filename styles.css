@@ -87,11 +87,21 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 .field textarea { resize: vertical; }
 .field input:focus, .field select:focus, .field textarea:focus, .addrow input:focus { border-color: var(--gold); }
 .field select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%), linear-gradient(135deg, var(--gold) 50%, transparent 50%); background-position: calc(100% - 20px) 20px, calc(100% - 14px) 20px; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+.grid3 { display: grid; grid-template-columns: 1.5fr .8fr 1fr; gap: 8px; }
+.grid3 select { width: 100%; background: #171517; border: 2px solid var(--line); border-radius: 14px; padding: 12px 8px; min-height: 46px; outline: none; appearance: none; text-overflow: ellipsis; }
+.grid3 select:focus { border-color: var(--gold); }
+.combo { margin: 14px 0; }
+.combo .field { margin: 8px 0 0; }
+.combo .field:first-child { margin-top: 0; }
+.combo .field + .field > span { font-size: 12px; font-weight: 500; color: var(--muted); }
+.combo .field + .field input { min-height: 42px; border-style: dashed; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
 .group { margin: 16px 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips.pad { margin: 12px 0; }
 .chip { border: 2px solid var(--line); background: #201c1f; color: #d8ced0; border-radius: 99px; padding: 9px 13px; font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.chip[data-group] { text-transform: none; }
 .chip.on { background: #3b3020; border-color: var(--gold); color: #ffe3a6; }
 .chip.removable { text-transform: none; }
 .seg { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }

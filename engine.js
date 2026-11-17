@@ -141,46 +141,130 @@
   const abo = (bt) => String(bt || "").replace(/[+-]/g, "");
 
   // ---------- targets ----------
+  // ---------- effective profile values (a typed value beats the dropdown) ----------
+  function effAge(pr, now) {
+    now = now || new Date();
+    const y = +pr.bdY, m = +pr.bdM, d = +pr.bdD;
+    if (y && m && d) {
+      const dt = new Date(y, m - 1, d);
+      if (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) {
+        let a = now.getFullYear() - y;
+        if (now.getMonth() < m - 1 || (now.getMonth() === m - 1 && now.getDate() < d)) a--;
+        if (a >= 0 && a <= 120) return a;
+      }
+    }
+    const t = parseFloat(pr.ageTxt);
+    if (t > 0 && t <= 120) return Math.floor(t);
+    const sel = parseFloat(pr.age);
+    return sel > 0 ? sel : NaN;
+  }
+  function parseHeightText(txt, us) {
+    const t = String(txt || "").toLowerCase().trim();
+    if (!t) return NaN;
+    let m = t.match(/^(\d+(?:\.\d+)?)\s*(?:'|ft|feet|foot|-|\s)\s*(\d+(?:\.\d+)?)?\s*(?:"|in|inch|inches)?$/);
+    if (m && (m[2] !== undefined || /'|ft|feet|foot/.test(t))) {
+      const ft = parseFloat(m[1]), inch = parseFloat(m[2] || 0);
+      if (ft >= 3 && ft <= 8) return (ft * 12 + inch) * 2.54;
+    }
+    const n = parseFloat(t);
+    if (!(n > 0)) return NaN;
+    if (/cm$/.test(t)) return n;
+    if (/m$/.test(t) && n < 3) return n * 100;
+    if (n >= 100 && n <= 250) return n;           // looks like cm
+    if (n >= 1 && n <= 2.6) return n * 100;       // metres
+    if (n >= 48 && n <= 96) return n * 2.54;      // inches
+    if (n >= 3 && n <= 8) return n * 12 * 2.54;   // feet
+    return NaN;
+  }
   function toMetric(pr) {
-    const w = parseFloat(pr.weight);
-    let kg = NaN, cm = NaN;
-    if (pr.units === "metric") { kg = w; cm = parseFloat(pr.heightCm); }
-    else {
-      kg = w * 0.45359237;
-      const ft = parseFloat(pr.heightFt) || 0, inch = parseFloat(pr.heightIn) || 0;
-      cm = ft || inch ? (ft * 12 + inch) * 2.54 : NaN;
+    const us = pr.units !== "metric";
+    let w = parseFloat(pr.weightTxt);
+    if (!(w > 0)) w = parseFloat(pr.weight);
+    const kg = us ? w * 0.45359237 : w;
+    let cm = parseHeightText(pr.heightTxt, us);
+    if (!(cm > 0)) {
+      const sel = String(pr.heightSel || "");
+      const m = sel.match(/^(\d+)-(\d+)$/);
+      if (m) cm = (+m[1] * 12 + +m[2]) * 2.54;
+      else if (parseFloat(sel) > 0) cm = parseFloat(sel);
+      else if (us) { // saved by an older version of the app
+        const ft = parseFloat(pr.heightFt) || 0, inch = parseFloat(pr.heightIn) || 0;
+        cm = ft || inch ? (ft * 12 + inch) * 2.54 : NaN;
+      } else cm = parseFloat(pr.heightCm);
     }
     return { kg, cm };
   }
+  const DIET_WORDS = [
+    [/vegan/, "vegan"], [/vegetarian|veggie/, "vegetarian"], [/pesc(?:a|e)tarian/, "pescatarian"], [/flexitarian/, "flexitarian"],
+    [/keto/, "keto"], [/low[- ]?carb/, "lowcarb"], [/mediterranean/, "mediterranean"], [/paleo/, "paleo"],
+    [/gluten/, "glutenfree"], [/dairy[- ]?free|no dairy/, "dairyfree"], [/halal/, "halal"], [/kosher/, "kosher"],
+    [/high[- ]?protein/, "highprotein"], [/anti[- ]?inflam/, "antiinflam"], [/whole[- ]?foods?/, "wholefoods"],
+    [/blood\s*type/, "bloodtype"], [/omnivore|carnivore|anything|everything|no restrict/, "omni"]
+  ];
+  function effDiet(pr) {
+    const t = String(pr.dietTxt || "").toLowerCase();
+    if (t) for (const [re, id] of DIET_WORDS) if (re.test(t)) return id;
+    return pr.diet || "unsure";
+  }
+  function effBlood(pr) {
+    const t = String(pr.bloodTypeTxt || "").toUpperCase().replace(/\s|POSITIVE|NEGATIVE/g, (x) => (x === "POSITIVE" ? "+" : x === "NEGATIVE" ? "-" : ""));
+    return /^(AB|A|B|O)[+-]?$/.test(t) ? t : pr.bloodType;
+  }
+  // ---------- conditions ----------
+  const SERIOUS = /kidney|dialysis|pregnan|breastfeeding|postpartum|eating disorder|cancer|chemotherapy|transplant|liver disease|cirrhosis|hepatitis|heart failure|type 1|gestational|bariatric|crohn|colitis|gastroparesis|swallowing|epilepsy|sickle|hemochromatosis|recent surgery|metabolic/i;
+  function condFlags(conds) {
+    const list = (conds || []).map((c) => String(c).toLowerCase());
+    const has = (re) => list.some((c) => re.test(c));
+    return {
+      gluten: has(/celiac|gluten/), dairy: has(/lactose/), ed: has(/eating disorder/),
+      serious: (conds || []).some((c) => SERIOUS.test(c))
+    };
+  }
+  // Allergies the planner must respect: the ones you picked, plus ones implied by conditions.
+  function effAllergies(st) {
+    const a = [...(st.profile.allergies || [])], f = condFlags(st.profile.conditions);
+    if (f.gluten && !a.includes("gluten")) a.push("gluten");
+    if (f.dairy && !a.includes("dairy")) a.push("dairy");
+    return a;
+  }
+  function bodyGoal(st) {
+    const b = st.goals.body;
+    if (condFlags(st.profile.conditions).ed) return "maintain"; // never push weight-loss targets
+    return b === "healthy" ? "maintain" : b;
+  }
+
+  // ---------- targets ----------
   function estimateCalories(st) {
-    const pr = st.profile, age = parseFloat(pr.age), { kg, cm } = toMetric(pr);
-    const body = st.goals.body;
+    const pr = st.profile, age = effAge(pr), { kg, cm } = toMetric(pr);
+    const body = bodyGoal(st);
     const notes = [];
     if (!(age >= 18 && age <= 100)) {
       if (age < 18) notes.push("Calorie targets aren't tuned for under 18, so we used a general 2,000 kcal. Check with a doctor or dietitian.");
       return { cal: 2000, estimated: false, notes };
     }
     if (!(kg >= 30 && kg <= 300 && cm >= 120 && cm <= 230)) return { cal: 2000, estimated: false, notes };
-    const sexAdj = pr.sex === "male" ? 5 : pr.sex === "female" ? -161 : -78;
+    const sex = pr.sex || (/^(m|male|man)$/i.test(String(pr.sexTxt || "").trim()) ? "male" : /^(f|female|woman)$/i.test(String(pr.sexTxt || "").trim()) ? "female" : "");
+    const sexAdj = sex === "male" ? 5 : sex === "female" ? -161 : -78;
     const bmr = 10 * kg + 6.25 * cm - 5 * age + sexAdj;
     let cal = bmr * 1.4; // light-to-moderate activity
-    if (body === "lose") cal -= 400;
-    else if (body === "gain") cal += 350;
-    else if (body === "muscle") cal += 250;
-    cal = Math.max(1200, Math.round(cal / 10) * 10);
+    const adj = { lose: -400, lose_slow: -250, gain: 350, muscle: 250, endurance: 150, recomp: 0 }[body] || 0;
+    cal = Math.max(1200, Math.round((cal + adj) / 10) * 10);
     return { cal, estimated: true, notes };
   }
+
   function resolveTargets(st) {
     const tg = st.targets || {};
     const num = (v) => { const n = parseFloat(v); return n > 0 ? n : NaN; };
     const est = estimateCalories(st);
-    const diet = st.profile.diet, body = st.goals.body;
+    const diet = effDiet(st.profile), body = bodyGoal(st);
     let cal = num(tg.cal);
     const userCal = cal > 0;
     if (!userCal) cal = est.cal;
     let ratio = { p: 0.2, c: 0.45, f: 0.35 };
     if (body === "muscle" || body === "gain") ratio = { p: 0.25, c: 0.45, f: 0.3 };
-    if (body === "lose") ratio = { p: 0.28, c: 0.37, f: 0.35 };
+    if (body === "lose" || body === "lose_slow") ratio = { p: 0.28, c: 0.37, f: 0.35 };
+    if (body === "recomp") ratio = { p: 0.3, c: 0.4, f: 0.3 };
+    if (body === "endurance") ratio = { p: 0.2, c: 0.55, f: 0.25 };
     if (diet === "highprotein") ratio = { p: 0.33, c: 0.37, f: 0.3 };
     if (diet === "lowcarb") ratio = { p: 0.3, c: 0.25, f: 0.45 };
     if (diet === "keto") ratio = { p: 0.22, c: 0.06, f: 0.72 };
@@ -193,35 +277,72 @@
       estimated: !userCal && est.estimated,
       notes: [...est.notes]
     };
+    if (condFlags(st.profile.conditions).ed) out.notes.push("Because of your eating-disorder history we won't use weight-loss targets. Please build your meal plan together with your care team.");
     if (out.cal < 1200) out.notes.push("Targets under 1,200 kcal a day should only be followed with a doctor or dietitian.");
     return out;
   }
 
   // ---------- scoring (soft preferences) ----------
   function goalWeights(st) {
-    const g = st.goals, w = { micro: {}, fiber: 0, protein: 0, o3: 0, netcarb: 0 };
+    const g = st.goals, w = { micro: {}, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0 };
     const add = (k, v) => { w.micro[k] = (w.micro[k] || 0) + v; };
-    g.micros.forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
-    g.beauty.forEach((b) => {
-      if (b === "skin") { add("C", 1); add("A", 1); w.o3 += 1; }
-      if (b === "hair") { add("Fe", 1); add("B12", 1); w.protein += 0.5; }
-      if (b === "nails") { add("Mg", 1); add("Ca", 1); w.protein += 0.5; }
-    });
-    g.wellness.forEach((x) => {
-      if (x === "energy") { add("B12", 1); add("Fe", 1); add("Mg", 1); }
-      if (x === "digestion") w.fiber += 0.5;
-      if (x === "heart") { add("K", 1); add("Mg", 1); w.fiber += 0.3; w.o3 += 1; }
-      if (x === "bones") { add("Ca", 1.5); add("D", 1); add("Mg", 1); }
-    });
+    (g.micros || []).forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
+    const BEAUTY = {
+      skin: () => { add("C", 1); add("A", 1); w.o3 += 1; },
+      clear: () => { add("A", 1); w.o3 += 1; w.fiber += 0.2; },
+      aging: () => { add("C", 1.2); add("A", 1); w.o3 += 1; w.protein += 0.3; },
+      tone: () => { add("C", 1.5); add("A", 0.5); },
+      hydrate: () => { add("K", 1); add("C", 1); add("Mg", 0.5); },
+      hair: () => { add("Fe", 1); add("B12", 1); w.protein += 0.5; },
+      shine: () => { w.o3 += 1.5; w.protein += 0.3; add("Fe", 0.5); },
+      nails: () => { add("Mg", 1); add("Ca", 1); w.protein += 0.5; },
+      eyes: () => { add("A", 1.5); add("C", 0.5); },
+      teeth: () => { add("Ca", 1.2); add("D", 1); add("C", 0.5); },
+      puffy: () => { add("K", 1.2); add("Mg", 0.6); w.fiber += 0.3; }
+    };
+    const WELL = {
+      energy: () => { add("B12", 1); add("Fe", 1); add("Mg", 1); },
+      digestion: () => { w.fiber += 0.5; },
+      gut: () => { w.fiber += 0.6; },
+      heart: () => { add("K", 1); add("Mg", 1); w.fiber += 0.3; w.o3 += 1; },
+      bones: () => { add("Ca", 1.5); add("D", 1); add("Mg", 1); },
+      immunity: () => { add("C", 1); add("D", 1); add("Fe", 0.6); add("A", 0.6); },
+      sleep: () => { add("Mg", 1.2); add("K", 0.6); },
+      mood: () => { add("Mg", 1); add("B12", 0.8); w.o3 += 1; },
+      focus: () => { w.o3 += 1.2; add("B12", 0.8); add("Fe", 0.6); },
+      bloodsugar: () => { w.fiber += 0.5; w.netcarb += 0.08; add("Mg", 0.8); },
+      bp: () => { add("K", 1.2); add("Mg", 1); },
+      inflam: () => { w.o3 += 1.5; add("C", 0.8); w.fiber += 0.3; },
+      joints: () => { w.o3 += 1.5; add("C", 1); },
+      cholesterol: () => { w.fiber += 0.5; w.o3 += 1; },
+      hormones: () => { add("Mg", 1); w.fiber += 0.3; w.o3 += 0.5; },
+      pms: () => { add("Mg", 1); add("Ca", 0.8); },
+      menopause: () => { add("Ca", 1.2); add("D", 1); add("Mg", 0.8); },
+      recovery: () => { w.protein += 0.5; add("Mg", 0.8); add("K", 0.8); },
+      metabolism: () => { w.protein += 0.4; w.fiber += 0.3; add("Fe", 0.5); }
+    };
+    (g.beauty || []).forEach((b) => BEAUTY[b] && BEAUTY[b]());
+    (g.wellness || []).forEach((x) => WELL[x] && WELL[x]());
+    (g.lifestyle || []).forEach((x) => { if (x === "quick") w.quick += 1; if (x === "plants") w.plants += 1; if (x === "hiprot") w.protein += 0.9; });
     for (const c of st.profile.conditions || []) {
       const s = c.toLowerCase();
-      if (s.includes("diabetes")) { w.fiber += 0.4; w.netcarb += 0.08; }
-      if (s.includes("blood pressure")) { add("K", 1); add("Mg", 1); }
-      if (s.includes("cholesterol")) { w.fiber += 0.4; w.o3 += 1; }
-      if (s.includes("iron")) add("Fe", 2);
+      if (/diabetes|insulin|metabolic|pcos|obesity/.test(s)) { w.fiber += 0.4; w.netcarb += 0.08; }
+      if (/blood pressure|hypertension|heart|atrial|stroke/.test(s)) { add("K", 1); add("Mg", 1); w.fiber += 0.2; }
+      if (/cholesterol|triglycerides|fatty liver/.test(s)) { w.fiber += 0.4; w.o3 += 1; }
+      if (/iron|anemia/.test(s)) add("Fe", 2);
+      if (/b12/.test(s)) add("B12", 2);
+      if (/vitamin d/.test(s)) add("D", 2);
+      if (/osteopor|osteopenia/.test(s)) { add("Ca", 1.5); add("D", 1.2); add("Mg", 0.8); }
+      if (/arthritis|fibromyalgia|lupus|inflammation|psoriasis|eczema/.test(s)) { w.o3 += 1; add("C", 0.6); }
+      if (/constipation|diverticul/.test(s)) w.fiber += 0.4;
+      if (/migraine|depress|anxiety|brain fog|adhd/.test(s)) { w.o3 += 0.8; add("Mg", 0.6); }
+      if (/muscle loss|sarcopenia|underweight/.test(s)) w.protein += 0.6;
     }
-    if (g.body === "lose") { w.fiber += 0.3; w.protein += 0.4; }
-    if (g.body === "muscle" || g.body === "gain") w.protein += 0.8;
+    const body = bodyGoal(st);
+    if (body === "lose" || body === "lose_slow") { w.fiber += 0.3; w.protein += 0.4; }
+    if (body === "muscle" || body === "gain") w.protein += 0.8;
+    if (body === "recomp") w.protein += 0.9;
+    if (body === "endurance") { add("K", 0.8); add("Mg", 0.8); add("Fe", 0.6); }
     return w;
   }
   const SHARE = { Breakfast: 0.25, Lunch: 0.35, Dinner: 0.4 };
@@ -239,7 +360,7 @@
     for (const m in W_.micro) s += W_.micro[m] * Math.min(3, (n.mi[m] || 0) / 15);
     s += n.fi * W_.fiber * 0.4 + n.p * W_.protein * 0.1 + (r.o3 ? W_.o3 * 1.5 : 0);
     s -= Math.max(0, r.net - 20) * W_.netcarb;
-    const diet = st.profile.diet;
+    const diet = effDiet(st.profile);
     if (diet === "flexitarian" && r.tags.vegetarian) s += 3;
     if (diet === "highprotein") s += n.p * 0.1;
     if (diet === "antiinflam") s += Math.min(6, r.aiCount * 1.5) + (r.o3 ? 2 : 0);
@@ -249,18 +370,20 @@
       if (r.ids.includes("oliveoil")) s += 1;
     }
     if (diet === "bloodtype") {
-      const rule = BLOOD_RULES[abo(st.profile.bloodType)];
+      const rule = BLOOD_RULES[abo(effBlood(st.profile))];
       if (rule) {
         s += 2 * r.ids.filter((i) => rule.prefer.includes(i)).length;
         s -= 7 * r.ids.filter((i) => rule.avoid.includes(i)).length;
       }
     }
+    if (W_.quick && r.time) s += r.time <= 25 ? 3 * W_.quick : -Math.min(4, (r.time - 25) / 6) * W_.quick;
+    if (W_.plants) s += (r.tags.vegan ? 3 : r.tags.vegetarian ? 2 : 0) * W_.plants;
     return s;
   }
 
   // ---------- plan generation ----------
   function recipeAllowed(r, st) {
-    return dietAllows(r, st.profile.diet) && allergyHits(r, st.profile.allergies).length === 0;
+    return dietAllows(r, effDiet(st.profile)) && allergyHits(r, effAllergies(st)).length === 0;
   }
   function generatePlan(st, opts = {}) {
     const days = clamp(Math.round(st.planLen || 7), 1, 60);
@@ -369,6 +492,6 @@
   Object.assign(W, {
     clamp, ymd, daysBetween, recipeById, nutr, richIn, allergyHits, dietAllows, recipeAllowed,
     resolveTargets, generatePlan, planPosition, shoppingList, fmtFrac, fmtG, fmtMl,
-    fmtRecipeLine, fmtShopQty, goalWeights, abo
+    fmtRecipeLine, fmtShopQty, goalWeights, abo, effAge, effDiet, effBlood, effAllergies, condFlags, toMetric, parseHeightText, bodyGoal
   });
 })(globalThis);

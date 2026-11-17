@@ -447,12 +447,49 @@
 
   W.BLOOD_TYPES = [["", "Choose..."], ["unknown", "I'm not sure"], ["O+", "O+"], ["O-", "O−"], ["A+", "A+"], ["A-", "A−"], ["B+", "B+"], ["B-", "B−"], ["AB+", "AB+"], ["AB-", "AB−"]];
   W.COMMON_ALLERGIES = ["peanuts", "tree nuts", "dairy", "eggs", "fish", "shellfish", "soy", "gluten", "sesame"];
-  W.CONDITIONS = ["Diabetes / prediabetes", "High blood pressure", "High cholesterol", "Digestive issues", "Iron deficiency / anemia", "Thyroid condition", "Kidney disease", "Pregnant or breastfeeding"];
+  W.ETHNICITIES = [
+    "American Indian or Alaska Native", "Arab / Middle Eastern", "Black / African American", "African (Sub-Saharan)",
+    "Caribbean", "East Asian (Chinese, Japanese, Korean...)", "South Asian (Indian, Pakistani, Bangladeshi...)",
+    "Southeast Asian (Filipino, Vietnamese, Thai...)", "Central Asian", "Hispanic / Latino", "Native Hawaiian or Pacific Islander",
+    "North African", "White / European", "Mixed / multiracial", "Other", "Prefer not to say"
+  ];
+
+  // Full range of conditions, grouped for the dropdown (nothing here is required)
+  W.CONDITION_GROUPS = [
+    { g: "Heart & circulation", items: ["High blood pressure (hypertension)", "Low blood pressure", "High cholesterol", "High triglycerides", "Heart disease / coronary artery disease", "Heart failure", "Irregular heartbeat (atrial fibrillation)", "Past heart attack or stroke", "Poor circulation / peripheral artery disease", "Blood clots (DVT) or varicose veins"] },
+    { g: "Diabetes & metabolism", items: ["Type 2 diabetes", "Type 1 diabetes", "Prediabetes", "Gestational diabetes", "Insulin resistance", "Metabolic syndrome", "PCOS (polycystic ovary syndrome)", "Obesity", "Underweight / unintentional weight loss", "Fatty liver disease (NAFLD)", "Gout / high uric acid"] },
+    { g: "Digestive", items: ["Celiac disease", "Non-celiac gluten sensitivity", "Lactose intolerance", "IBS (irritable bowel syndrome)", "Crohn's disease", "Ulcerative colitis", "GERD / acid reflux", "Gastritis or stomach ulcer", "Gastroparesis", "Diverticulitis", "Chronic constipation", "Chronic diarrhea", "Gallstones / gallbladder problems", "SIBO", "Food intolerances (general)", "Bariatric surgery (gastric bypass or sleeve)", "Difficulty chewing or swallowing"] },
+    { g: "Kidney, liver & urinary", items: ["Chronic kidney disease", "Kidney stones", "Dialysis", "Liver disease / cirrhosis", "Hepatitis", "Frequent urinary tract infections"] },
+    { g: "Thyroid & hormones", items: ["Hypothyroidism", "Hyperthyroidism", "Hashimoto's thyroiditis", "Graves' disease", "Adrenal problems", "Low testosterone", "Menopause / perimenopause", "Endometriosis", "Irregular periods", "Trying to conceive / fertility concerns"] },
+    { g: "Pregnancy & postpartum", items: ["Pregnant", "Breastfeeding", "Postpartum recovery"] },
+    { g: "Bones, joints & muscles", items: ["Osteoporosis / osteopenia", "Osteoarthritis", "Rheumatoid arthritis", "Fibromyalgia", "Chronic pain", "Muscle loss (sarcopenia)", "Chronic fatigue syndrome"] },
+    { g: "Autoimmune & immune", items: ["Lupus", "Multiple sclerosis", "Psoriasis", "Eczema", "Frequent colds / weak immunity", "HIV", "Long COVID"] },
+    { g: "Lungs & breathing", items: ["Asthma", "COPD", "Sleep apnea", "Chronic sinus problems", "Seasonal allergies / hay fever"] },
+    { g: "Blood & nutrient levels", items: ["Iron-deficiency anemia", "Vitamin B12 deficiency", "Vitamin D deficiency", "Low folate", "Sickle cell disease", "Hemochromatosis (iron overload)"] },
+    { g: "Brain & mental health", items: ["Migraines", "Epilepsy", "Parkinson's disease", "Alzheimer's / dementia", "ADHD", "Autism", "Anxiety", "Depression", "Insomnia", "Brain fog", "PTSD", "Bipolar disorder"] },
+    { g: "Eating & body image", items: ["Eating disorder (current or past)"] },
+    { g: "Skin, hair, eyes & teeth", items: ["Acne", "Rosacea", "Hair loss / thinning", "Dandruff / scalp problems", "Brittle nails", "Very dry skin", "Eye disease (glaucoma or macular degeneration)", "Cataracts", "Gum disease"] },
+    { g: "Cancer, surgery & transplant", items: ["Cancer (in treatment)", "Cancer survivor", "Chemotherapy or radiation", "Recent surgery", "Organ transplant"] },
+    { g: "Other", items: ["Histamine intolerance", "Chronic inflammation", "Seasonal depression (SAD)", "Smoker", "Frequent dehydration"] }
+  ];
+  W.CONDITIONS = W.CONDITION_GROUPS.flatMap((x) => x.items);
 
   W.GOALS = {
-    body: [["lose", "Lose weight"], ["gain", "Gain weight"], ["muscle", "Build muscle"], ["maintain", "Maintain weight"]],
+    body: [
+      ["lose", "Lose weight"], ["lose_slow", "Lose weight slowly & gently"], ["gain", "Gain weight"], ["muscle", "Build muscle"],
+      ["recomp", "Lose fat & build muscle"], ["endurance", "Fuel endurance / athletic performance"], ["maintain", "Maintain my weight"], ["healthy", "Just eat healthier (no weight goal)"]
+    ],
     micros: [["A", "Vitamin A"], ["C", "Vitamin C"], ["D", "Vitamin D"], ["B12", "Vitamin B12"], ["Fe", "Iron"], ["Ca", "Calcium"], ["K", "Potassium"], ["Mg", "Magnesium"], ["o3", "Omega-3"], ["fiber", "Fiber"]],
-    beauty: [["skin", "Glowing skin"], ["hair", "Hair growth"], ["nails", "Strong nails"]],
-    wellness: [["energy", "More energy"], ["digestion", "Better digestion"], ["heart", "Heart health"], ["bones", "Bone health"]]
+    beauty: [
+      ["skin", "Glowing skin"], ["clear", "Clearer skin"], ["aging", "Anti-aging / fewer wrinkles"], ["tone", "Even skin tone"], ["hydrate", "Hydrated, dewy skin"],
+      ["hair", "Hair growth"], ["shine", "Shiny, healthy hair"], ["nails", "Strong nails"], ["eyes", "Bright, healthy eyes"], ["teeth", "Healthy teeth & gums"], ["puffy", "Less puffiness & bloating"]
+    ],
+    wellness: [
+      ["energy", "More energy"], ["digestion", "Better digestion"], ["gut", "Gut health"], ["heart", "Heart health"], ["bones", "Bone health"], ["immunity", "Stronger immunity"],
+      ["sleep", "Better sleep"], ["mood", "Mood & stress support"], ["focus", "Focus & brain health"], ["bloodsugar", "Steady blood sugar"], ["bp", "Healthy blood pressure"],
+      ["inflam", "Less inflammation"], ["joints", "Joint support"], ["cholesterol", "Healthy cholesterol"], ["hormones", "Hormone balance"], ["pms", "Easier PMS"],
+      ["menopause", "Menopause support"], ["recovery", "Workout recovery"], ["metabolism", "Healthy metabolism"]
+    ],
+    lifestyle: [["quick", "Quick meals (about 25 min or less)"], ["plants", "Eat more plants"], ["hiprot", "Extra protein"]]
   };
 })(globalThis);

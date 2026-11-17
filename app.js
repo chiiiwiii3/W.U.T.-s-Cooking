@@ -14,8 +14,8 @@
   function defaults() {
     return {
       v: 3, screen: "onboarding", step: 1, view: null, back: "home",
-      profile: { name: "", age: "", sex: "", units: "us", weight: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", bloodType: "", diet: "unsure", allergies: [], conditions: [] },
-      goals: { body: "", micros: [], beauty: [], wellness: [] },
+      profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
+      goals: { body: "", micros: [], beauty: [], wellness: [], lifestyle: [] },
       targets: { cal: "", p: "", c: "", f: "" },
       planLen: 7, lenCustom: false,
       newLen: "7", newLenCustom: "",
@@ -51,7 +51,7 @@
     setTimeout(() => t.remove(), 2400);
   }
   const portionText = (p) => (p === 1 ? "1 serving" : `${W.fmtFrac(p)} servings`);
-  const dietLabel = () => (W.DIETS.find((d) => d.id === state.profile.diet) || W.DIETS[0]).label;
+  const dietLabel = () => (W.DIETS.find((d) => d.id === W.effDiet(state.profile)) || W.DIETS[0]).label;
   const dateLabel = (ymd) => { const p = ymd.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); };
 
   // ---------- form builders ----------
@@ -69,44 +69,80 @@
   const stat = (label, val, unit) => `<div class="stat"><b>${val}${unit || ""}</b><span>${label}</span></div>`;
 
   // ---------- onboarding / profile form sections ----------
+  // ----- option lists for the dropdowns -----
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const rng = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  const withChoose = (list, text) => [["", text || "Choose…"], ...list];
+  const ageOpts = () => withChoose(rng(13, 100).map((n) => [String(n), n + " years"]));
+  const weightOpts = (us) => withChoose(us ? rng(80, 450).map((n) => [String(n), `${n} lb (${Math.round(n * 0.45359237)} kg)`]) : rng(35, 200).map((n) => [String(n), `${n} kg (${Math.round(n / 0.45359237)} lb)`]));
+  const heightOpts = (us) => {
+    if (!us) return withChoose(rng(100, 230).map((c) => [String(c), `${c} cm (${Math.floor(Math.round(c / 2.54) / 12)} ft ${Math.round(c / 2.54) % 12} in)`]));
+    const out = [];
+    for (let ft = 3; ft <= 7; ft++) for (let i = 0; i < 12; i++) out.push([`${ft}-${i}`, `${ft} ft ${i} in (${Math.round((ft * 12 + i) * 2.54)} cm)`]);
+    return withChoose(out);
+  };
+  const selBare = (path, options, label) => {
+    const cur = String(getPath(path));
+    return `<select aria-label="${esc(label)}" data-bind="${path}" data-rr>${options.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === cur ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  };
+  // A dropdown with an optional type-in box underneath (a typed value wins over the dropdown)
+  function combo(label, selPath, options, txtPath, o = {}) {
+    return `<div class="combo">${sel(label, selPath, options, !!o.rr)}${inp(o.typedLabel || "Or type your own (optional)", txtPath, { ph: o.ph || "", type: o.type || "text" })}</div>`;
+  }
   function body1() {
     const p = state.profile, us = p.units === "us";
+    const age = W.effAge(p), bdSet = p.bdM && p.bdD && p.bdY;
+    const bdOk = bdSet && (() => { const y = +p.bdY, m = +p.bdM, d = +p.bdD, dt = new Date(y, m - 1, d); return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d; })();
+    const yr = new Date().getFullYear();
+    const bdNote = bdSet ? (bdOk ? `<p class="hint">🎂 That makes you <b>${age}</b> years old.</p>` : `<div class="note">That date doesn't exist. Please check the month and day.</div>`) : "";
     return `
       ${inp("What should we call you?", "profile.name", { ph: "Your name" })}
-      <div class="grid2">${inp("Age", "profile.age", { type: "number", min: 1, max: 120, ph: "years" })}
-      ${sel("Sex (for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other"]])}</div>
+      <div class="group"><div class="label">Birthday <small>optional</small></div>
+        <div class="grid3">${selBare("profile.bdM", withChoose(MONTHS.map((m, i) => [String(i + 1), m]), "Month"), "Birth month")}${selBare("profile.bdD", withChoose(rng(1, 31).map((n) => [String(n), String(n)]), "Day"), "Birth day")}${selBare("profile.bdY", withChoose(rng(yr - 110, yr).reverse().map((n) => [String(n), String(n)]), "Year"), "Birth year")}</div>
+        ${bdNote}</div>
+      ${combo("Age", "profile.age", ageOpts(), "profile.ageTxt", { rr: true, ph: "e.g. 34", type: "number" })}
+      <p class="hint">If you add your birthday we'll use it for your age.</p>
+      ${combo("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]], "profile.sexTxt", { ph: "Anything else you'd like us to know" })}
       <div class="seg" role="group" aria-label="Units">${chip("US (lb, ft/in)", us, "units", "us")}${chip("Metric (kg, cm)", !us, "units", "metric")}</div>
-      <div class="grid2">
-        ${us ? `${inp("Height (ft)", "profile.heightFt", { type: "number", min: 3, max: 8, ph: "ft" })}${inp("Height (in)", "profile.heightIn", { type: "number", min: 0, max: 11, ph: "in" })}` : `${inp("Height (cm)", "profile.heightCm", { type: "number", min: 100, max: 250, ph: "cm" })}<span></span>`}
-      </div>
-      ${inp(us ? "Weight (lb)" : "Weight (kg)", "profile.weight", { type: "number", min: 1, max: 700, ph: us ? "lb" : "kg" })}
-      ${inp("Ethnicity (optional)", "profile.ethnicity", { ph: "Optional" })}
-      ${sel("Blood type", "profile.bloodType", W.BLOOD_TYPES, true)}
+      ${combo(us ? "Height" : "Height", "profile.heightSel", heightOpts(us), "profile.heightTxt", { rr: true, ph: us ? `e.g. 5'6" or 168 cm` : "e.g. 168 or 1.68 m" })}
+      ${combo(us ? "Weight (lb)" : "Weight (kg)", "profile.weight", weightOpts(us), "profile.weightTxt", { rr: true, ph: us ? "e.g. 152.5" : "e.g. 69.5", type: "number" })}
+      ${combo("Ethnicity", "profile.ethnicity", withChoose(W.ETHNICITIES.map((e) => [e, e])), "profile.ethnicityTxt", { rr: true, ph: "Describe it your way" })}
+      ${combo("Blood type", "profile.bloodType", W.BLOOD_TYPES, "profile.bloodTypeTxt", { rr: true, ph: "e.g. AB negative" })}
       <p class="hint">Everything here is optional, and it stays on your device.</p>`;
   }
+  function condDropdown() {
+    const have = state.profile.conditions;
+    return `<label class="field"><span class="sr">Add a health condition</span><select data-chg="addCond" aria-label="Add a health condition"><option value="">＋ Choose a condition to add…</option>${W.CONDITION_GROUPS.map((g) => `<optgroup label="${esc(g.g)}">${g.items.map((c) => `<option value="${esc(c)}" ${have.includes(c) ? "disabled" : ""}>${esc(c)}${have.includes(c) ? " ✓" : ""}</option>`).join("")}</optgroup>`).join("")}</select></label>`;
+  }
   function body2() {
-    const p = state.profile, d = W.DIETS.find((x) => x.id === p.diet) || W.DIETS[0];
+    const p = state.profile, dId = W.effDiet(p), d = W.DIETS.find((x) => x.id === dId) || W.DIETS[0];
     const custom = p.allergies.filter((a) => !COMMON.includes(a));
-    const needBT = p.diet === "bloodtype" && (!p.bloodType || p.bloodType === "unknown");
-    const serious = p.conditions.some((c) => /kidney|pregnant/i.test(c));
+    const needBT = dId === "bloodtype" && !/^(AB|A|B|O)[+-]?$/.test(String(W.effBlood(p) || ""));
+    const f = W.condFlags(p.conditions);
+    const extraAllergy = [f.gluten ? "gluten (from your condition)" : "", f.dairy ? "dairy (from your condition)" : ""].filter(Boolean);
     return `
-      ${sel("Diet preference", "profile.diet", W.DIETS.map((x) => [x.id, x.label]), true)}
+      ${combo("Diet preference", "profile.diet", W.DIETS.map((x) => [x.id, x.label]), "profile.dietTxt", { rr: true, ph: "e.g. mostly vegan, no pork", typedLabel: "Describe your diet (optional)" })}
       <p class="hint">${esc(d.desc)}</p>
-      ${needBT ? `<div class="note">Blood type diet needs your blood type. Pick it here, or choose “I'm not sure” and we'll keep meals balanced.</div>${sel("Blood type", "profile.bloodType", W.BLOOD_TYPES, true)}` : ""}
+      ${p.dietTxt.trim() ? `<p class="hint">${W.effDiet(Object.assign({}, p, { dietTxt: "" })) !== dId ? `We read what you typed as <b>${esc(d.label)}</b>.` : "We saved your note. We couldn't match it to a diet, so your dropdown choice is used."}</p>` : ""}
+      ${needBT ? `<div class="note">Blood type diet needs your blood type. Pick it on the first screen, or choose “I'm not sure” and we'll keep meals balanced.</div>` : ""}
       <div class="group"><div class="label">Allergies <small>we never include these</small></div>
         <div class="chips">${COMMON.map((a) => chip(a, p.allergies.includes(a), "allergy", a)).join("")}</div>
         <div class="addrow"><input id="allergyInput" type="text" placeholder="Other allergy? Type it (e.g. kiwi)" autocomplete="off" aria-label="Add another allergy"><button type="button" class="btn small" data-act="addAllergy">Add</button></div>
         ${custom.length ? `<div class="chips">${custom.map((a) => `<button type="button" class="chip on removable" data-act="rmAllergy" data-arg="${esc(a)}" aria-label="Remove ${esc(a)}">${esc(a)} ✕</button>`).join("")}</div>` : ""}
+        ${extraAllergy.length ? `<p class="hint">Also avoiding: ${esc(extraAllergy.join(", "))}.</p>` : ""}
       </div>
-      <div class="group"><div class="label">Health conditions <small>optional</small></div>
-        <div class="chips">${W.CONDITIONS.map((c) => chip(c, p.conditions.includes(c), "cond", c)).join("")}</div>
-        ${serious ? `<div class="note">Please review any meal plan with your doctor or dietitian.</div>` : ""}
+      <div class="group"><div class="label">Health conditions <small>optional · pick as many as apply</small></div>
+        ${condDropdown()}
+        ${p.conditions.length ? `<div class="chips">${p.conditions.map((c) => `<button type="button" class="chip on removable" data-act="rmCond" data-arg="${esc(c)}" aria-label="Remove ${esc(c)}">${esc(c)} ✕</button>`).join("")}</div>` : `<p class="hint">None selected. That's fine, or skip this.</p>`}
+        <div class="addrow"><input id="condInput" type="text" placeholder="Condition not listed? Type it" autocomplete="off" aria-label="Add another health condition"><button type="button" class="btn small" data-act="addCondTxt">Add</button></div>
+        ${f.serious ? `<div class="note">One or more of your conditions needs medical guidance. Please review any meal plan with your doctor or dietitian.</div>` : ""}
+        ${f.ed ? `<div class="note">We'll keep calories at a maintenance level and won't push weight-loss goals. Please plan with your care team.</div>` : ""}
       </div>`;
   }
   function body3() {
     const g = state.goals, G = W.GOALS;
-    const grp = (title, key, list, multi) => `<div class="group"><div class="label">${title}</div><div class="chips">${list.map(([v, l]) => chip(l, multi ? g[key].includes(v) : g.body === v, "goal", v, `data-group="${key}"`)).join("")}</div></div>`;
-    return `${grp("Body goal", "body", G.body, false)}${grp("Vitamin &amp; mineral boosts", "micros", G.micros, true)}${grp("Beauty &amp; aesthetics", "beauty", G.beauty, true)}${grp("Wellness", "wellness", G.wellness, true)}
+    const grp = (title, key, list, multi) => `<div class="group"><div class="label">${title}</div><div class="chips">${list.map(([v, l]) => chip(l, multi ? (g[key] || []).includes(v) : g.body === v, "goal", v, `data-group="${key}"`)).join("")}</div></div>`;
+    return `${grp("Body goal <small>pick one</small>", "body", G.body, false)}${grp("Vitamin &amp; mineral boosts", "micros", G.micros, true)}${grp("Beauty &amp; aesthetics", "beauty", G.beauty, true)}${grp("Wellness", "wellness", G.wellness, true)}${grp("Everyday eating", "lifestyle", G.lifestyle, true)}
       <p class="hint">Pick as many as you like, or none at all.</p>`;
   }
   function body4() {
@@ -393,7 +429,27 @@
     back: () => { state.step = Math.max(1, state.step - 1); save(); render(); },
     next: () => { if (state.step < 4) { state.step++; save(); render(); } else finishOnboarding(); },
     skip: () => ACT.next(),
-    units: (a) => { state.profile.units = a; save(); render(true); },
+    units: (a) => {
+      const p = state.profile;
+      if (p.units === a) return;
+      const m = W.toMetric(p);
+      p.units = a; p.weightTxt = ""; p.heightTxt = "";
+      p.weight = m.kg >= 30 && m.kg <= 300 ? String(a === "metric" ? Math.round(m.kg) : Math.round(m.kg / 0.45359237)) : "";
+      if (m.cm >= 100 && m.cm <= 230) {
+        if (a === "metric") p.heightSel = String(Math.round(m.cm));
+        else { const t = Math.round(m.cm / 2.54); p.heightSel = `${Math.floor(t / 12)}-${t % 12}`; }
+      } else p.heightSel = "";
+      save(); render(true);
+    },
+    addCond: (a) => { if (a && !state.profile.conditions.includes(a)) { state.profile.conditions.push(a); save(); } render(true); },
+    rmCond: (a) => { state.profile.conditions = state.profile.conditions.filter((x) => x !== a); save(); render(true); },
+    addCondTxt: () => {
+      const el = document.getElementById("condInput"), v = el ? el.value.trim() : "";
+      if (!v) return;
+      if (!state.profile.conditions.some((c) => c.toLowerCase() === v.toLowerCase())) state.profile.conditions.push(v);
+      save(); render(true);
+      const n = document.getElementById("condInput"); if (n) n.focus();
+    },
     allergy: (a) => { state.profile.allergies = toggleIn(state.profile.allergies, a); save(); render(true); },
     addAllergy: addAllergies,
     rmAllergy: (a) => { state.profile.allergies = state.profile.allergies.filter((x) => x !== a); save(); render(true); },
@@ -401,7 +457,7 @@
     goal: (a, el) => {
       const g = el.dataset.group;
       if (g === "body") state.goals.body = state.goals.body === a ? "" : a;
-      else state.goals[g] = toggleIn(state.goals[g], a);
+      else state.goals[g] = toggleIn(state.goals[g] || [], a);
       save(); render(true);
     },
     len: (a) => { if (a === "custom") { state.lenCustom = true; } else { state.lenCustom = false; state.planLen = Number(a); } save(); render(true); },
@@ -469,6 +525,7 @@
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.matches && el.matches("input[type=checkbox][data-act]")) { ACT[el.dataset.act](el.dataset.arg, el); return; }
+    if (el.dataset && el.dataset.chg && ACT[el.dataset.chg]) { ACT[el.dataset.chg](el.value, el); return; }
     if (el.dataset && el.dataset.bind && el.tagName === "SELECT") {
       setPath(el.dataset.bind, el.value); save();
       if (el.dataset.rr !== undefined) render(true);
@@ -480,6 +537,7 @@
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && e.target.id === "allergyInput") { e.preventDefault(); addAllergies(); }
+    if (e.key === "Enter" && e.target.id === "condInput") { e.preventDefault(); ACT.addCondTxt(); }
     if (e.key === "Escape") closeModal();
   });
 
