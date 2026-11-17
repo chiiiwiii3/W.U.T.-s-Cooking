@@ -124,6 +124,12 @@
       </div>`;
   }
 
+  // ---------- 3D chef squirrel ----------
+  // Layers: shadow on the floor, then tilt (follows finger/mouse) > float (bobbing/swaying) > spin (tap) > image.
+  function mascot(cls) {
+    return `<button type="button" class="mascot3d ${cls || ""}" data-act="spin" aria-label="Chef squirrel. Tap to make him spin"><span class="m-shadow"></span><span class="m-tilt"><span class="m-float"><span class="m-spin"><img src="icons/wut-squirrel.webp" alt="" width="420" height="630" draggable="false"></span></span></span></button>`;
+  }
+
   const STEP_INFO = [
     null,
     { e: "Hello", t: "Let's meet you!", s: "A few quick questions so your meals fit you.", b: body1 },
@@ -135,7 +141,7 @@
     const n = state.step, i = STEP_INFO[n];
     return `<div class="page">
       <div class="steps" aria-label="Step ${n} of 4">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>
-      <div class="hero hasmascot"><img class="mascot" src="icons/wut-squirrel.webp" alt="W.U.T.'s chef squirrel" width="96" height="143"><div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
+      <div class="hero hasmascot">${mascot()}<div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
       <div class="card">${i.b()}</div>
       <button class="btn" data-act="next">${n === 4 ? "✨ Create my meal prep" : "Continue →"}</button>
       <div class="row2">${n > 1 ? `<button class="btn ghost" data-act="back">← Back</button>` : "<span></span>"}<button class="btn ghost" data-act="skip">Skip</button></div>
@@ -186,7 +192,7 @@
     const bar = (label, v, t) => `<div class="bar"><div class="barhead"><span>${label}</span><span>${Math.round(v)} / ${t} g</span></div><div class="track"><i style="width:${Math.min(100, (v / t) * 100)}%"></i></div></div>`;
     const done = isInstalled();
     return `<div class="page">
-      <div class="hero hasmascot"><img class="mascot" src="icons/wut-squirrel.webp" alt="W.U.T.'s chef squirrel" width="96" height="143"><div class="eyebrow">Meal of the day · ${esc(dateLabel(today()))}</div><h1>Good ${greet}, ${esc(state.profile.name || "friend")}!</h1>
+      <div class="hero hasmascot">${mascot()}<div class="eyebrow">Meal of the day · ${esc(dateLabel(today()))}</div><h1>Good ${greet}, ${esc(state.profile.name || "friend")}!</h1>
       <p>Day ${pos.idx + 1} of your ${plan.days}-day meal prep.</p></div>
       ${pos.over ? `<div class="note">Your ${plan.days}-day plan has finished, so we're repeating it. Tap <b>New plan</b> below for fresh meals.</div>` : ""}
       ${missingNotes()}
@@ -256,7 +262,7 @@
     return `<div class="page"><div class="hero"><div class="eyebrow">Kitchen</div><h1>My Recipes</h1><p>Your favorites and the recipes you've added.</p></div>
       <button class="btn" data-act="go" data-arg="add">＋ Add my recipe</button>
       <div class="chips pad">${chip(`All saved`, f === "all", "filter", "all")}${chip(`Favorites (${favs.length})`, f === "fav", "filter", "fav")}${chip(`Mine (${mine.length})`, f === "mine", "filter", "mine")}</div>
-      ${cards || `<div class="empty card"><img class="emptyimg" src="icons/wut-squirrel.webp" alt="" width="110" height="164"><p>${empty}</p></div>`}</div>`;
+      ${cards || `<div class="empty card">${mascot("inline")}<p>${empty}</p></div>`}</div>`;
   }
 
   function addScreen() {
@@ -313,7 +319,7 @@
         ${S.pantry.length ? `<div class="card"><h3>🧂 Check your pantry</h3><p class="muted">Not counted above. You'll likely need small amounts of: ${esc(S.pantry.join(", "))}, plus salt and pepper.</p></div>` : ""}
         <p class="fine">Amounts are raw or dry weights as you buy them. Cooked rice, quinoa and lentils weigh more.</p>
         <button class="btn" data-act="shopcopy">📋 Copy list</button><button class="btn ghost" data-act="shopclear">Clear checkmarks</button>`
-        : `<div class="empty card"><img class="emptyimg" src="icons/wut-squirrel.webp" alt="" width="110" height="164"><p>No meals to shop for yet. Make a plan first.</p></div>`}</div>`;
+        : `<div class="empty card">${mascot("inline")}<p>No meals to shop for yet. Make a plan first.</p></div>`}</div>`;
   }
 
   function profile() {
@@ -442,6 +448,13 @@
       state.favorites = state.favorites.filter((x) => x !== id);
       go("recipes");
     },
+    spin: (a, el) => {
+      const sp = el.querySelector(".m-spin");
+      if (!sp) return;
+      sp.classList.remove("go"); void sp.offsetWidth; sp.classList.add("go");
+      const lines = ["Let's cook! 👨‍🍳", "Wheee! 🌀", "Nuts about meal prep! 🌰", "Eat your veggies! 🥦"];
+      toast(lines[Math.floor(Math.random() * lines.length)]);
+    },
     install: () => installApp(),
     closeModal: () => closeModal()
   };
@@ -469,6 +482,28 @@
     if (e.key === "Enter" && e.target.id === "allergyInput") { e.preventDefault(); addAllergies(); }
     if (e.key === "Escape") closeModal();
   });
+
+
+  // ---------- squirrel tilts toward your finger / mouse ----------
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let tiltRaf = 0, tiltX = 0, tiltY = 0;
+  function applyTilt() {
+    tiltRaf = 0;
+    document.querySelectorAll(".mascot3d").forEach((m) => {
+      const r = m.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const dx = Math.max(-1, Math.min(1, (tiltX - cx) / 260)), dy = Math.max(-1, Math.min(1, (tiltY - cy) / 260));
+      m.style.setProperty("--ry", (dx * 24).toFixed(1) + "deg");
+      m.style.setProperty("--rx", (-dy * 14).toFixed(1) + "deg");
+    });
+  }
+  function resetTilt() {
+    document.querySelectorAll(".mascot3d").forEach((m) => { m.style.setProperty("--ry", "0deg"); m.style.setProperty("--rx", "0deg"); });
+  }
+  if (!reduceMotion) {
+    document.addEventListener("pointermove", (e) => { tiltX = e.clientX; tiltY = e.clientY; if (!tiltRaf) tiltRaf = requestAnimationFrame(applyTilt); }, { passive: true });
+    document.addEventListener("pointerup", (e) => { if (e.pointerType !== "mouse") setTimeout(resetTilt, 600); });
+    document.addEventListener("pointerleave", resetTilt);
+  }
 
   // ---------- add to home screen ----------
   let deferredPrompt = null;
