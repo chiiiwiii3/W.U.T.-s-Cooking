@@ -21,7 +21,8 @@ A mobile-first meal-prep and recipe app (installable PWA). Tell it about yoursel
 - **Shopping list:** for a day, a week or 2 weeks, with how much to buy and what kind, grouped by store section, with check-offs and copy-to-clipboard
 
 ## How it works
-- `data.js`: ingredient catalog (nutrition, allergens, buying tips) and 27 recipes built from it
+- `data.js`: ingredient catalog (nutrition, allergens, buying tips) and the first 27 recipes
+- `data2.js`: recipe pack 2 (more ingredients and 65 more recipes, 92 in total)
 - `calc.js`: health calculators and reference charts (pure math)
 - `nutty.js`: the Getting Nutty screen
 - `engine.js`: nutrition math, allergy/diet filtering, plan generation, shopping lists (no DOM code)

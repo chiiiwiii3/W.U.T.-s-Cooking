@@ -367,7 +367,7 @@
       pantry: ["Black pepper"],
       steps: [
         "Slice the beef thinly against the grain and marinate with the soy sauce, grated ginger and minced garlic for 10 minutes. Start the rice (about 40 minutes).",
-        "Sear the beef in hot olive oil for 1–2 minutes per side until browned. Remove it from the pan.",
+        "Sear the beef in hot olive oil for 1–2 minutes per side until browned and no longer raw in the middle (145 °F / 63 °C). Remove it from the pan.",
         "Stir-fry the broccoli with a splash of water for 3–4 minutes until bright green and crisp-tender.",
         "Return the beef, drizzle with sesame oil and serve over the rice."
       ],

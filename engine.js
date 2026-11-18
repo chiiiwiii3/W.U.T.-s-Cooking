@@ -104,7 +104,7 @@
     if (/sesame|tahini/.test(a)) cats.add("sesame");
     const words = new Set();
     const SYN = [
-      [/citrus/, ["lemon", "lime", "orange", "grapefruit"]], [/nightshade/, ["tomato", "pepper", "eggplant", "potato"]],
+      [/citrus/, ["lemon", "lime", "orange", "grapefruit"]], [/nightshade/, ["tomato", "bell pepper", "eggplant", "white potato", "paprika", "chili", "cayenne", "jalape"]],
       [/poultry/, ["chicken", "turkey", "duck"]], [/red meat|mammal|alpha/, ["beef", "pork", "lamb"]],
       [/allium|onion|garlic/, ["onion", "garlic", "shallot", "leek"]], [/legume/, ["lentil", "chickpea", "bean", "pea "]],
       [/berr/, ["blueberr", "strawberr", "raspberr", "blackberr"]], [/\bseeds?\b/, ["chia", "flax", "sunflower seed", "pumpkin seed", "hemp"]],
@@ -129,6 +129,8 @@
       let hit = false;
       if (!r.user) for (const c of cats) if (r.allergens.includes(c)) hit = true;
       if (!hit) hit = words.some((w) => names.some((n) => n.includes(w)));
+      // pantry items (spices, mustard, broth…) are checked too, using longer words only so "nuts" doesn't match "nutritional yeast"
+      if (!hit && !r.user && r.pantry) { const pan = r.pantry.map((s) => s.toLowerCase()); hit = words.some((w) => w.length >= 4 && pan.some((n) => n.includes(w))); }
       if (hit) hits.push(raw);
     }
     return hits;
@@ -478,7 +480,7 @@
     const slots = ["Breakfast", "Lunch", "Dinner"];
     const pools = {};
     for (const slot of slots) pools[slot] = RECIPES.filter((r) => r.meal === slot && recipeAllowed(r, st));
-    const used = { Breakfast: {}, Lunch: {}, Dinner: {} };
+    const used = { Breakfast: {}, Lunch: {}, Dinner: {} }, uses = { Breakfast: {}, Lunch: {}, Dinner: {} };
     const items = [], missing = [];
     for (const slot of slots) if (!pools[slot].length) missing.push(slot);
     for (let d = 0; d < days; d++) {
@@ -490,10 +492,10 @@
         for (const r of pool) {
           const last = used[slot][r.id];
           const gap = last === undefined ? 99 : d - last;
-          const s = scoreRecipe(r, st, T, slot, W_) - Math.max(0, 4 - gap) * 4 + rnd() * 1.5;
+          const s = scoreRecipe(r, st, T, slot, W_) - Math.max(0, 4 - gap) * 4 - (uses[slot][r.id] || 0) * 2.2 + rnd() * 2;
           if (s > bestScore) { bestScore = s; best = r; }
         }
-        used[slot][best.id] = d;
+        used[slot][best.id] = d; uses[slot][best.id] = (uses[slot][best.id] || 0) + 1;
         items.push({ day: d, slot, rid: best.id, portion: portionFor(best, T, slot) });
       }
     }
