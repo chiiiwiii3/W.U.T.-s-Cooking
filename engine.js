@@ -45,6 +45,9 @@
     r.ids = r.ing.map((x) => x[0]);
     r.o3 = gs.some((g) => g.o3);
     r.aiCount = gs.filter((g) => g.ai).length;
+    r.gsCount = {};
+    gs.forEach((g) => (g.gs || []).forEach((k) => { r.gsCount[k] = (r.gsCount[k] || 0) + 1; }));
+    r.na = gs.reduce((n, g) => n + (g.hiNa || 0), 0);
     r.tags = {
       vegan: !(meat || fish || shell || dairy || egg),
       vegetarian: !(meat || fish || shell),
@@ -284,39 +287,39 @@
 
   // ---------- scoring (soft preferences) ----------
   function goalWeights(st) {
-    const g = st.goals, w = { micro: {}, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0 };
-    const add = (k, v) => { w.micro[k] = (w.micro[k] || 0) + v; };
+    const g = st.goals, w = { micro: {}, src: {}, lowNa: 0, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0 };
+    const add = (k, v) => { if (W.TRACKED.includes(k)) w.micro[k] = (w.micro[k] || 0) + v; else if (k === "Na") w.lowNa += v; else w.src[k] = (w.src[k] || 0) + v; };
     (g.micros || []).forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
     const BEAUTY = {
-      skin: () => { add("C", 1); add("A", 1); w.o3 += 1; },
+      skin: () => { add("C", 1); add("A", 1); add("E", 0.8); add("Zn", 0.5); w.o3 += 1; },
       clear: () => { add("A", 1); w.o3 += 1; w.fiber += 0.2; },
       aging: () => { add("C", 1.2); add("A", 1); w.o3 += 1; w.protein += 0.3; },
       tone: () => { add("C", 1.5); add("A", 0.5); },
       hydrate: () => { add("K", 1); add("C", 1); add("Mg", 0.5); },
-      hair: () => { add("Fe", 1); add("B12", 1); w.protein += 0.5; },
+      hair: () => { add("Fe", 1); add("B12", 1); add("B7", 0.8); add("Zn", 0.8); w.protein += 0.5; },
       shine: () => { w.o3 += 1.5; w.protein += 0.3; add("Fe", 0.5); },
-      nails: () => { add("Mg", 1); add("Ca", 1); w.protein += 0.5; },
-      eyes: () => { add("A", 1.5); add("C", 0.5); },
+      nails: () => { add("Mg", 1); add("Ca", 1); add("B7", 0.8); w.protein += 0.5; },
+      eyes: () => { add("A", 1.5); add("C", 0.5); add("Zn", 0.5); add("E", 0.5); },
       teeth: () => { add("Ca", 1.2); add("D", 1); add("C", 0.5); },
       puffy: () => { add("K", 1.2); add("Mg", 0.6); w.fiber += 0.3; }
     };
     const WELL = {
-      energy: () => { add("B12", 1); add("Fe", 1); add("Mg", 1); },
+      energy: () => { add("B12", 1); add("Fe", 1); add("Mg", 1); add("B1", 0.4); add("B2", 0.4); add("B3", 0.4); add("B6", 0.4); },
       digestion: () => { w.fiber += 0.5; },
       gut: () => { w.fiber += 0.6; },
       heart: () => { add("K", 1); add("Mg", 1); w.fiber += 0.3; w.o3 += 1; },
-      bones: () => { add("Ca", 1.5); add("D", 1); add("Mg", 1); },
-      immunity: () => { add("C", 1); add("D", 1); add("Fe", 0.6); add("A", 0.6); },
+      bones: () => { add("Ca", 1.5); add("D", 1); add("Mg", 1); add("VK", 0.8); },
+      immunity: () => { add("C", 1); add("D", 1); add("Fe", 0.6); add("A", 0.6); add("Zn", 0.8); add("Se", 0.8); },
       sleep: () => { add("Mg", 1.2); add("K", 0.6); },
-      mood: () => { add("Mg", 1); add("B12", 0.8); w.o3 += 1; },
-      focus: () => { w.o3 += 1.2; add("B12", 0.8); add("Fe", 0.6); },
+      mood: () => { add("Mg", 1); add("B12", 0.8); add("B6", 0.6); add("B9", 0.6); w.o3 += 1; },
+      focus: () => { w.o3 += 1.2; add("B12", 0.8); add("Fe", 0.6); add("Choline", 0.8); },
       bloodsugar: () => { w.fiber += 0.5; w.netcarb += 0.08; add("Mg", 0.8); },
-      bp: () => { add("K", 1.2); add("Mg", 1); },
+      bp: () => { add("K", 1.2); add("Mg", 1); w.lowNa += 0.8; },
       inflam: () => { w.o3 += 1.5; add("C", 0.8); w.fiber += 0.3; },
       joints: () => { w.o3 += 1.5; add("C", 1); },
       cholesterol: () => { w.fiber += 0.5; w.o3 += 1; },
       hormones: () => { add("Mg", 1); w.fiber += 0.3; w.o3 += 0.5; },
-      pms: () => { add("Mg", 1); add("Ca", 0.8); },
+      pms: () => { add("Mg", 1); add("Ca", 0.8); add("B6", 0.8); },
       menopause: () => { add("Ca", 1.2); add("D", 1); add("Mg", 0.8); },
       recovery: () => { w.protein += 0.5; add("Mg", 0.8); add("K", 0.8); },
       metabolism: () => { w.protein += 0.4; w.fiber += 0.3; add("Fe", 0.5); }
@@ -327,7 +330,7 @@
     for (const c of st.profile.conditions || []) {
       const s = c.toLowerCase();
       if (/diabetes|insulin|metabolic|pcos|obesity/.test(s)) { w.fiber += 0.4; w.netcarb += 0.08; }
-      if (/blood pressure|hypertension|heart|atrial|stroke/.test(s)) { add("K", 1); add("Mg", 1); w.fiber += 0.2; }
+      if (/blood pressure|hypertension|heart|atrial|stroke/.test(s)) { add("K", 1); add("Mg", 1); w.fiber += 0.2; w.lowNa += 0.8; }
       if (/cholesterol|triglycerides|fatty liver/.test(s)) { w.fiber += 0.4; w.o3 += 1; }
       if (/iron|anemia/.test(s)) add("Fe", 2);
       if (/b12/.test(s)) add("B12", 2);
@@ -376,9 +379,25 @@
         s -= 7 * r.ids.filter((i) => rule.avoid.includes(i)).length;
       }
     }
+    for (const k in W_.src) s += W_.src[k] * Math.min(3, r.gsCount[k] || 0) * 0.9;
+    if (W_.lowNa) s -= W_.lowNa * r.na * 2.2;
     if (W_.quick && r.time) s += r.time <= 25 ? 3 * W_.quick : -Math.min(4, (r.time - 25) / 6) * W_.quick;
     if (W_.plants) s += (r.tags.vegan ? 3 : r.tags.vegetarian ? 2 : 0) * W_.plants;
     return s;
+  }
+
+  // Which of the nutrients you picked does this recipe deliver? (amount for tracked ones, "good source" for the rest)
+  function goalMatches(r, st, portion) {
+    const out = [], picked = (st.goals.micros || []);
+    const n = r.user ? null : nutr(r, portion || 1);
+    for (const k of picked) {
+      if (k === "o3") { if (r.o3) out.push({ k, label: W.NUTRIENT_LABEL.o3 }); }
+      else if (k === "fiber") { if (n && n.fi >= 8) out.push({ k, label: "Fiber", pct: Math.round(n.fi) + " g" }); }
+      else if (k === "Na") { if (!r.user && r.na === 0) out.push({ k, label: "Low in sodium" }); }
+      else if (W.TRACKED.includes(k)) { if (n && n.mi[k] >= 15) out.push({ k, label: MICRO_LABELS[k], pct: Math.round(n.mi[k]) + "%" }); }
+      else if (!r.user && (r.gsCount[k] || 0) > 0) out.push({ k, label: MICRO_LABELS[k] || W.NUTRIENT_LABEL[k], src: true });
+    }
+    return out;
   }
 
   // ---------- plan generation ----------
@@ -412,6 +431,26 @@
       }
     }
     return { id: "p" + seed, seed, start: ymd(opts.now || new Date()), days, items, missing };
+  }
+  // Swap ONE meal (a given day + slot) for a different, safe one. Everything else stays as it is.
+  function swapMeal(st, dayIdx, slot, opts = {}) {
+    const plan = st.plan;
+    const it = plan && plan.items.find((i) => i.day === dayIdx && i.slot === slot);
+    if (!it) return { ok: false, reason: "missing" };
+    const T = resolveTargets(st), W_ = goalWeights(st), rnd = mulberry32(opts.seed != null ? opts.seed : (Date.now() ^ ((Math.random() * 1e9) | 0)) & 0x7fffffff);
+    const pool = RECIPES.filter((r) => r.meal === slot && r.id !== it.rid && recipeAllowed(r, st));
+    if (!pool.length) return { ok: false, reason: "none" };
+    const usage = {};
+    for (const x of plan.items) if (x.slot === slot) usage[x.rid] = (usage[x.rid] || 0) + 1;
+    const near = (r) => plan.items.some((x) => x.slot === slot && x.rid === r.id && Math.abs(x.day - dayIdx) <= 1);
+    let best = null, bestScore = -Infinity;
+    for (const r of pool) {
+      const sc = scoreRecipe(r, st, T, slot, W_) - (usage[r.id] || 0) * 2.5 - (near(r) ? 6 : 0) + rnd() * 5;
+      if (sc > bestScore) { bestScore = sc; best = r; }
+    }
+    const before = { rid: it.rid, portion: it.portion };
+    it.rid = best.id; it.portion = portionFor(best, T, slot);
+    return { ok: true, before, after: { rid: it.rid, portion: it.portion } };
   }
   // Where are we in the plan today?
   function planPosition(plan, now) {
@@ -492,6 +531,6 @@
   Object.assign(W, {
     clamp, ymd, daysBetween, recipeById, nutr, richIn, allergyHits, dietAllows, recipeAllowed,
     resolveTargets, generatePlan, planPosition, shoppingList, fmtFrac, fmtG, fmtMl,
-    fmtRecipeLine, fmtShopQty, goalWeights, abo, effAge, effDiet, effBlood, effAllergies, condFlags, toMetric, parseHeightText, bodyGoal
+    fmtRecipeLine, fmtShopQty, goalWeights, abo, swapMeal, goalMatches, effAge, effDiet, effBlood, effAllergies, condFlags, toMetric, parseHeightText, bodyGoal
   });
 })(globalThis);

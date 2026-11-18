@@ -9,6 +9,7 @@
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
   const today = () => W.ymd(new Date());
   const COMMON = W.COMMON_ALLERGIES;
+  const MAX_FILES = 3, MAX_FILE = 1.5e6;
   const SLOT_EMOJI = { Breakfast: "🍳", Lunch: "🥪", Dinner: "🍲", Snack: "🍎" };
 
   function defaults() {
@@ -20,8 +21,9 @@
       planLen: 7, lenCustom: false,
       newLen: "7", newLenCustom: "",
       plan: null, favorites: [], myRecipes: [], log: [],
-      shop: { win: 1, checked: {} }, filter: "all",
-      draft: { name: "", meal: "Lunch", ingredients: "", steps: "", storage: "", cal: "", p: "", c: "", f: "" }
+      shop: { win: 1, checked: {} }, filter: "all", undo: null,
+      nutty: W.nutty.fresh(),
+      draft: { name: "", meal: "Lunch", ingredients: "", steps: "", storage: "", cal: "", p: "", c: "", f: "", files: [] }
     };
   }
   function load() {
@@ -35,7 +37,7 @@
     return d;
   }
   let state = load();
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { return false; } }
 
   function getPath(path) { return path.split(".").reduce((o, k) => (o == null ? o : o[k]), state); }
   function setPath(path, v) {
@@ -52,6 +54,7 @@
   }
   const portionText = (p) => (p === 1 ? "1 serving" : `${W.fmtFrac(p)} servings`);
   const dietLabel = () => (W.DIETS.find((d) => d.id === W.effDiet(state.profile)) || W.DIETS[0]).label;
+  const dietPillText = () => (W.effDiet(state.profile) === "unsure" ? "Diet: Balanced mix" : "Diet: " + dietLabel());
   const dateLabel = (ymd) => { const p = ymd.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); };
 
   // ---------- form builders ----------
@@ -89,8 +92,8 @@
   function combo(label, selPath, options, txtPath, o = {}) {
     return `<div class="combo">${sel(label, selPath, options, !!o.rr)}${inp(o.typedLabel || "Or type your own (optional)", txtPath, { ph: o.ph || "", type: o.type || "text" })}</div>`;
   }
-  function body1() {
-    const p = state.profile, us = p.units === "us";
+  function bodyBasics() {
+    const p = state.profile;
     const age = W.effAge(p), bdSet = p.bdM && p.bdD && p.bdY;
     const bdOk = bdSet && (() => { const y = +p.bdY, m = +p.bdM, d = +p.bdD, dt = new Date(y, m - 1, d); return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d; })();
     const yr = new Date().getFullYear();
@@ -103,9 +106,19 @@
       ${combo("Age", "profile.age", ageOpts(), "profile.ageTxt", { rr: true, ph: "e.g. 34", type: "number" })}
       <p class="hint">If you add your birthday we'll use it for your age.</p>
       ${combo("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]], "profile.sexTxt", { ph: "Anything else you'd like us to know" })}
+      <p class="hint">Everything here is optional, and it stays on your device.</p>`;
+  }
+  function bodyMeasure() {
+    const p = state.profile, us = p.units === "us";
+    return `
       <div class="seg" role="group" aria-label="Units">${chip("US (lb, ft/in)", us, "units", "us")}${chip("Metric (kg, cm)", !us, "units", "metric")}</div>
-      ${combo(us ? "Height" : "Height", "profile.heightSel", heightOpts(us), "profile.heightTxt", { rr: true, ph: us ? `e.g. 5'6" or 168 cm` : "e.g. 168 or 1.68 m" })}
+      ${combo("Height", "profile.heightSel", heightOpts(us), "profile.heightTxt", { rr: true, ph: us ? `e.g. 5'6" or 168 cm` : "e.g. 168 or 1.68 m" })}
       ${combo(us ? "Weight (lb)" : "Weight (kg)", "profile.weight", weightOpts(us), "profile.weightTxt", { rr: true, ph: us ? "e.g. 152.5" : "e.g. 69.5", type: "number" })}
+      <p class="hint">Used only to estimate calories and portions. Skip it if you'd rather not say.</p>`;
+  }
+  function bodyEthno() {
+    const p = state.profile;
+    return `
       ${combo("Ethnicity", "profile.ethnicity", withChoose(W.ETHNICITIES.map((e) => [e, e])), "profile.ethnicityTxt", { rr: true, ph: "Describe it your way" })}
       ${combo("Blood type", "profile.bloodType", W.BLOOD_TYPES, "profile.bloodTypeTxt", { rr: true, ph: "e.g. AB negative" })}
       <p class="hint">Everything here is optional, and it stays on your device.</p>`;
@@ -114,23 +127,31 @@
     const have = state.profile.conditions;
     return `<label class="field"><span class="sr">Add a health condition</span><select data-chg="addCond" aria-label="Add a health condition"><option value="">＋ Choose a condition to add…</option>${W.CONDITION_GROUPS.map((g) => `<optgroup label="${esc(g.g)}">${g.items.map((c) => `<option value="${esc(c)}" ${have.includes(c) ? "disabled" : ""}>${esc(c)}${have.includes(c) ? " ✓" : ""}</option>`).join("")}</optgroup>`).join("")}</select></label>`;
   }
-  function body2() {
+  function bodyDiet() {
     const p = state.profile, dId = W.effDiet(p), d = W.DIETS.find((x) => x.id === dId) || W.DIETS[0];
-    const custom = p.allergies.filter((a) => !COMMON.includes(a));
     const needBT = dId === "bloodtype" && !/^(AB|A|B|O)[+-]?$/.test(String(W.effBlood(p) || ""));
-    const f = W.condFlags(p.conditions);
-    const extraAllergy = [f.gluten ? "gluten (from your condition)" : "", f.dairy ? "dairy (from your condition)" : ""].filter(Boolean);
     return `
       ${combo("Diet preference", "profile.diet", W.DIETS.map((x) => [x.id, x.label]), "profile.dietTxt", { rr: true, ph: "e.g. mostly vegan, no pork", typedLabel: "Describe your diet (optional)" })}
       <p class="hint">${esc(d.desc)}</p>
       ${p.dietTxt.trim() ? `<p class="hint">${W.effDiet(Object.assign({}, p, { dietTxt: "" })) !== dId ? `We read what you typed as <b>${esc(d.label)}</b>.` : "We saved your note. We couldn't match it to a diet, so your dropdown choice is used."}</p>` : ""}
-      ${needBT ? `<div class="note">Blood type diet needs your blood type. Pick it on the first screen, or choose “I'm not sure” and we'll keep meals balanced.</div>` : ""}
+      ${needBT ? `<div class="note">Blood type diet needs your blood type. Pick it on the ethnicity and blood type screen, or choose “I'm not sure” and we'll keep meals balanced.</div>` : ""}
+      <p class="hint">Not sure? Pick <b>I'm not sure</b>. We'll mix a bit of everything and you can change it any time.</p>`;
+  }
+  function bodyAllergies() {
+    const p = state.profile, custom = p.allergies.filter((a) => !COMMON.includes(a));
+    const f = W.condFlags(p.conditions);
+    const extraAllergy = [f.gluten ? "gluten (from your condition)" : "", f.dairy ? "dairy (from your condition)" : ""].filter(Boolean);
+    return `
       <div class="group"><div class="label">Allergies <small>we never include these</small></div>
         <div class="chips">${COMMON.map((a) => chip(a, p.allergies.includes(a), "allergy", a)).join("")}</div>
         <div class="addrow"><input id="allergyInput" type="text" placeholder="Other allergy? Type it (e.g. kiwi)" autocomplete="off" aria-label="Add another allergy"><button type="button" class="btn small" data-act="addAllergy">Add</button></div>
         ${custom.length ? `<div class="chips">${custom.map((a) => `<button type="button" class="chip on removable" data-act="rmAllergy" data-arg="${esc(a)}" aria-label="Remove ${esc(a)}">${esc(a)} ✕</button>`).join("")}</div>` : ""}
         ${extraAllergy.length ? `<p class="hint">Also avoiding: ${esc(extraAllergy.join(", "))}.</p>` : ""}
-      </div>
+      </div>`;
+  }
+  function bodyConditions() {
+    const p = state.profile, f = W.condFlags(p.conditions);
+    return `
       <div class="group"><div class="label">Health conditions <small>optional · pick as many as apply</small></div>
         ${condDropdown()}
         ${p.conditions.length ? `<div class="chips">${p.conditions.map((c) => `<button type="button" class="chip on removable" data-act="rmCond" data-arg="${esc(c)}" aria-label="Remove ${esc(c)}">${esc(c)} ✕</button>`).join("")}</div>` : `<p class="hint">None selected. That's fine, or skip this.</p>`}
@@ -139,12 +160,16 @@
         ${f.ed ? `<div class="note">We'll keep calories at a maintenance level and won't push weight-loss goals. Please plan with your care team.</div>` : ""}
       </div>`;
   }
-  function body3() {
-    const g = state.goals, G = W.GOALS;
-    const grp = (title, key, list, multi) => `<div class="group"><div class="label">${title}</div><div class="chips">${list.map(([v, l]) => chip(l, multi ? (g[key] || []).includes(v) : g.body === v, "goal", v, `data-group="${key}"`)).join("")}</div></div>`;
-    return `${grp("Body goal <small>pick one</small>", "body", G.body, false)}${grp("Vitamin &amp; mineral boosts", "micros", G.micros, true)}${grp("Beauty &amp; aesthetics", "beauty", G.beauty, true)}${grp("Wellness", "wellness", G.wellness, true)}${grp("Everyday eating", "lifestyle", G.lifestyle, true)}
-      <p class="hint">Pick as many as you like, or none at all.</p>`;
-  }
+  const goalGroup = (title, key, list, multi, hint) => `<div class="group"><div class="label">${title}</div>${hint ? `<p class="hint">${hint}</p>` : ""}<div class="chips">${list.map(([v, l]) => chip(l, multi ? (state.goals[key] || []).includes(v) : state.goals.body === v, "goal", v, `data-group="${key}"`)).join("")}</div></div>`;
+  const pick = (keys) => W.GOALS.micros.filter(([k]) => keys.includes(k));
+  const vitKeys = () => W.VITAMINS.map((x) => x[0]), minKeys = () => [...W.MINERALS.map((x) => x[0]), ...W.OTHER_NUTRIENTS.map((x) => x[0])];
+  const nutriNote = `<p class="fine">We track exact amounts for ${W.TRACKED.map((k) => W.NUTRIENT_LABEL[k]).join(", ")}. For the others we favor foods that are a <b>good source</b>, since exact amounts aren't in our food data.</p>`;
+  const bodyGoalStep = () => goalGroup("Body goal <small>pick one, or none</small>", "body", W.GOALS.body, false) + `<p class="hint">Pick as many as you like, or none at all.</p>`;
+  const bodyVitamins = () => goalGroup("Vitamins <small>pick any</small>", "micros", pick(vitKeys()), true) + nutriNote;
+  const bodyMinerals = () => goalGroup("Minerals, omega-3 &amp; fiber <small>pick any</small>", "micros", pick(minKeys()), true) + nutriNote;
+  const bodyBeauty = () => goalGroup("Beauty &amp; aesthetics <small>pick any</small>", "beauty", W.GOALS.beauty, true);
+  const bodyWellness = () => goalGroup("Wellness <small>pick any</small>", "wellness", W.GOALS.wellness, true);
+  const bodyLife = () => goalGroup("Everyday eating <small>pick any</small>", "lifestyle", W.GOALS.lifestyle, true);
   function body4() {
     const T = W.resolveTargets(state), ph = (k, u) => (T.auto[k] ? `≈ ${T[k]}${u} (auto)` : "");
     const lens = [[1, "1 day"], [7, "1 week"], [14, "2 weeks"], [30, "1 month"]];
@@ -166,21 +191,32 @@
     return `<button type="button" class="mascot3d ${cls || ""}" data-act="spin" aria-label="Chef squirrel. Tap to make him spin"><span class="m-shadow"></span><span class="m-tilt"><span class="m-float"><span class="m-spin"><img src="icons/wut-squirrel.webp" alt="" width="420" height="630" draggable="false"></span></span></span></button>`;
   }
 
-  const STEP_INFO = [
-    null,
-    { e: "Hello", t: "Let's meet you!", s: "A few quick questions so your meals fit you.", b: body1 },
-    { e: "Food profile", t: "What do you eat?", s: "We'll keep every meal safe and on-diet.", b: body2 },
-    { e: "Goals", t: "What are you aiming for?", s: "Pick goals and we'll favor foods that help.", b: body3 },
+  const STEPS = [
+    { e: "Hello", t: "Let's meet you!", s: "Your name and age. Skip anything you like.", b: bodyBasics },
+    { e: "Measurements", t: "Height & weight", s: "Helps us estimate your calories. Totally optional.", b: bodyMeasure },
+    { e: "Background", t: "Ethnicity & blood type", s: "Optional. Blood type matters only if you choose the blood type diet.", b: bodyEthno },
+    { e: "Diet", t: "How do you like to eat?", s: "Vegan, keto, blood type diet… or “I'm not sure”.", b: bodyDiet },
+    { e: "Allergies", t: "Anything to avoid?", s: "We will never put these in your meals.", b: bodyAllergies },
+    { e: "Health", t: "Health conditions", s: "Optional. Pick any that apply so meals can fit you.", b: bodyConditions },
+    { e: "Goals", t: "Your body goal", s: "One main goal, or skip.", b: bodyGoalStep },
+    { e: "Vitamins", t: "Vitamin boosts", s: "Pick the vitamins you want more of.", b: bodyVitamins },
+    { e: "Minerals", t: "Mineral boosts", s: "Minerals, omega-3 and fiber.", b: bodyMinerals },
+    { e: "Beauty", t: "Beauty & aesthetics", s: "Skin, hair, nails and glow.", b: bodyBeauty },
+    { e: "Wellness", t: "Wellness goals", s: "Energy, sleep, mood and more.", b: bodyWellness },
+    { e: "Everyday", t: "Everyday eating", s: "Quick meals, more plants, extra protein.", b: bodyLife },
     { e: "Nutrition & length", t: "Almost ready!", s: "Targets are optional, so skip if you're unsure.", b: body4 }
   ];
+  const NSTEPS = STEPS.length;
   function onboarding() {
-    const n = state.step, i = STEP_INFO[n];
+    const n = Math.min(NSTEPS, Math.max(1, Number(state.step) || 1)), i = STEPS[n - 1];
     return `<div class="page">
-      <div class="steps" aria-label="Step ${n} of 4">${[1, 2, 3, 4].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>
+      <div class="steps" role="img" aria-label="Step ${n} of ${NSTEPS}">${STEPS.map((_, k) => `<i class="${k < n ? "on" : ""}"></i>`).join("")}</div>
+      <p class="stepcount">Step ${n} of ${NSTEPS}</p>
       <div class="hero hasmascot">${mascot()}<div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
       <div class="card">${i.b()}</div>
-      <button class="btn" data-act="next">${n === 4 ? "✨ Create my meal prep" : "Continue →"}</button>
+      <button class="btn" data-act="next">${n === NSTEPS ? "✨ Create my meal prep" : "Continue →"}</button>
       <div class="row2">${n > 1 ? `<button class="btn ghost" data-act="back">← Back</button>` : "<span></span>"}<button class="btn ghost" data-act="skip">Skip</button></div>
+      ${n < NSTEPS ? `<button class="linkish center" data-act="skipall">Skip the rest and build my plan →</button>` : ""}
     </div>`;
   }
 
@@ -202,6 +238,14 @@
     return `<button type="button" class="pillbtn ate${ate ? " on" : ""}" aria-pressed="${ate}" data-act="ate" ${d}>${ate ? "✓ Ate it" : "🍽️ Ate it"}</button>
       <button type="button" class="pillbtn fav${fav ? " on" : ""}" aria-pressed="${fav}" data-act="fav" data-rid="${esc(rid)}">${fav ? "♥ Favorited" : "♡ Add to favorites"}</button>`;
   }
+  function goalTags(r, portion) {
+    const m = W.goalMatches(r, state, portion);
+    return m.length ? `<div class="tags goal">Matches your goals ${m.map((x) => `<span class="tag g">${esc(x.label)}${x.pct ? " " + esc(x.pct) : " ✓"}</span>`).join("")}</div>` : "";
+  }
+  function undoBar() {
+    const u = state.undo;
+    return u ? `<div class="undobar" role="status"><span>Swapped ${esc(u.slot.toLowerCase())} for <b>${esc(u.name)}</b></span><button type="button" data-act="undoSwap">Undo</button></div>` : "";
+  }
   function mealCard(it) {
     const r = W.recipeById(it.rid, state), n = W.nutr(r, it.portion);
     const names = r.ing.map(([id]) => W.ING[id].n.replace(/ \(.*\)/, ""));
@@ -213,7 +257,8 @@
       <div class="stats">${stat("kcal", Math.round(n.cal))}${stat("protein", Math.round(n.p), "g")}${stat("carbs", Math.round(n.c), "g")}${stat("fat", Math.round(n.f), "g")}${stat("fiber", Math.round(n.fi), "g")}</div>
       ${rich ? `<div class="tags">Rich in ${rich}</div>` : ""}
       <p class="ings"><b>Ingredients:</b> ${esc(names.slice(0, 5).join(", "))}${names.length > 5 ? ` +${names.length - 5} more` : ""}</p>
-      <div class="btnrow">${actionButtons(r.id, it.slot, it.portion)}<button type="button" class="pillbtn" data-act="open" data-rid="${esc(r.id)}" data-portion="${it.portion}" data-slot="${esc(it.slot)}">📖 Recipe</button></div>
+      ${goalTags(r, it.portion)}
+      <div class="btnrow">${actionButtons(r.id, it.slot, it.portion)}<button type="button" class="pillbtn" data-act="open" data-rid="${esc(r.id)}" data-portion="${it.portion}" data-slot="${esc(it.slot)}">📖 Recipe</button><button type="button" class="pillbtn" data-act="swap" data-day="${it.day}" data-slot="${esc(it.slot)}" aria-label="Swap ${esc(it.slot)} for a different meal">🔄 Swap</button></div>
     </article>`;
   }
 
@@ -231,7 +276,7 @@
       <div class="hero hasmascot">${mascot()}<div class="eyebrow">Meal of the day · ${esc(dateLabel(today()))}</div><h1>Good ${greet}, ${esc(state.profile.name || "friend")}!</h1>
       <p>Day ${pos.idx + 1} of your ${plan.days}-day meal prep.</p></div>
       ${pos.over ? `<div class="note">Your ${plan.days}-day plan has finished, so we're repeating it. Tap <b>New plan</b> below for fresh meals.</div>` : ""}
-      ${missingNotes()}
+      ${missingNotes()}${undoBar()}
       <div class="card ringcard">
         <div class="ring" style="--pct:${pct}%" role="img" aria-label="${Math.round(eaten.cal)} of ${T.cal} calories eaten"><div class="inside"><strong>${Math.round(eaten.cal)}</strong><small>of ${T.cal} kcal eaten</small></div></div>
         <p class="center muted">Planned today: ${Math.round(planned.cal)} kcal · ${Math.round(planned.p)}g protein${T.estimated ? " · target estimated from your profile" : ""}</p>
@@ -268,9 +313,9 @@
       const isToday = !pos.over && d === pos.idx;
       days.push(`<div class="card${isToday ? " today" : ""}"><div class="dayhead"><b>Day ${d + 1} · ${dt.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}${isToday ? " (today)" : ""}</b><span>${Math.round(kcal)} kcal</span></div>
         ${its.map((it) => { const r = W.recipeById(it.rid, state), n = W.nutr(r, it.portion);
-          return `<div class="planrow"><button class="linkish" data-act="open" data-rid="${esc(r.id)}" data-portion="${it.portion}" data-slot="${esc(it.slot)}"><span class="pe">${r.emoji}</span><span><b>${it.slot}</b> · ${esc(r.name)}<br><small>${portionText(it.portion)} · ${Math.round(n.cal)} kcal · ${Math.round(n.p)}g protein</small></span></button>${isToday ? `<button class="pillbtn ate${isAte(it.slot, r.id) ? " on" : ""}" data-act="ate" data-rid="${esc(r.id)}" data-slot="${esc(it.slot)}" data-portion="${it.portion}">${isAte(it.slot, r.id) ? "✓" : "Ate it"}</button>` : ""}</div>`; }).join("")}</div>`);
+          return `<div class="planrow"><button class="linkish" data-act="open" data-rid="${esc(r.id)}" data-portion="${it.portion}" data-slot="${esc(it.slot)}"><span class="pe">${r.emoji}</span><span><b>${it.slot}</b> · ${esc(r.name)}<br><small>${portionText(it.portion)} · ${Math.round(n.cal)} kcal · ${Math.round(n.p)}g protein</small></span></button><button class="pillbtn swap" data-act="swap" data-day="${d}" data-slot="${esc(it.slot)}" aria-label="Swap ${esc(it.slot)} on day ${d + 1}">🔄 Swap</button>${isToday ? `<button class="pillbtn ate${isAte(it.slot, r.id) ? " on" : ""}" data-act="ate" data-rid="${esc(r.id)}" data-slot="${esc(it.slot)}" data-portion="${it.portion}">${isAte(it.slot, r.id) ? "✓" : "Ate it"}</button>` : ""}</div>`; }).join("")}</div>`);
     }
-    return `<div class="page"><div class="hero"><div class="eyebrow">Meal prep</div><h1>${plan.days} day${plan.days > 1 ? "s" : ""} of meals</h1><p>Daily target about ${T.cal} kcal · ${T.p}g protein. Portions are sized to hit it.</p></div>${missingNotes()}${days.join("")}</div>`;
+    return `<div class="page"><div class="hero"><div class="eyebrow">Meal prep</div><h1>${plan.days} day${plan.days > 1 ? "s" : ""} of meals</h1><p>Daily target about ${T.cal} kcal · ${T.p}g protein. Portions are sized to hit it.</p></div>${missingNotes()}${undoBar()}<p class="hint">Don't like a meal? Tap <b>🔄 Swap</b> to get a different one for just that day.</p>${days.join("")}</div>`;
   }
 
   function savedRecipes() {
@@ -285,7 +330,8 @@
     const cards = list.map((r) => {
       const n = W.nutr(r, 1), hits = r.user ? W.allergyHits(r, state.profile.allergies) : [];
       return `<article class="card meal"><div class="sticker" aria-hidden="true">${r.emoji}</div>
-        <div class="eyebrow">${esc(r.meal)}${r.user ? " · My recipe" : ""}</div>
+        <div class="eyebrow">${esc(r.meal)}${r.user ? " · My recipe" : ""}${r.user && (r.files || []).length ? " · 📎" + r.files.length : ""}</div>
+        ${r.user && (r.files || []).find((f) => f.type.startsWith("image/")) ? `<img class="rthumb" src="${r.files.find((f) => f.type.startsWith("image/")).data}" alt="">` : ""}
         <h3><button class="linkish" data-act="open" data-rid="${esc(r.id)}" data-portion="1" data-slot="Extra">${esc(r.name)}</button></h3>
         ${n.known ? `<div class="stats">${stat("kcal", Math.round(n.cal))}${stat("protein", Math.round(n.p), "g")}${stat("carbs", Math.round(n.c), "g")}${stat("fat", Math.round(n.f), "g")}</div>` : `<p class="muted">No nutrition added.</p>`}
         ${hits.length ? `<div class="note">⚠️ May contain: ${esc(hits.join(", "))}</div>` : ""}
@@ -312,6 +358,10 @@
       <div class="label">Nutrition per serving <small>optional, skip if you don't know</small></div>
       <div class="grid2">${inp("Calories", "draft.cal", { type: "number" })}${inp("Protein (g)", "draft.p", { type: "number" })}</div>
       <div class="grid2">${inp("Carbs (g)", "draft.c", { type: "number" })}${inp("Fat (g)", "draft.f", { type: "number" })}</div></div>
+      <div class="card"><div class="label">Photos &amp; files <small>optional · a photo of the recipe card or dish, a PDF…</small></div>
+        <div class="uploadrow"><label class="btn small upl">📷 Take photo<input type="file" accept="image/*" capture="environment" data-file hidden></label><label class="btn small upl">🖼️ Choose picture or file<input type="file" accept="image/*,application/pdf,.pdf,.txt,.doc,.docx" multiple data-file hidden></label></div>
+        ${state.draft.files.length ? `<div class="thumbs">${state.draft.files.map((f, i) => `<div class="thumb">${f.type.startsWith("image/") ? `<img src="${f.data}" alt="${esc(f.name)}">` : `<span class="doc">📄<small>${esc(f.name)}</small></span>`}<button type="button" class="x" data-act="rmFile" data-arg="${i}" aria-label="Remove ${esc(f.name)}">✕</button></div>`).join("")}</div>` : ""}
+        <p class="fine">Saved on this device only. Up to ${MAX_FILES} files, ${Math.round(MAX_FILE / 1e6 * 10) / 10} MB each. We can't check photos for allergens, so check those yourself.</p></div>
       <button class="btn" data-act="saveRecipe">Save recipe</button><button class="btn ghost" data-act="go" data-arg="recipes">Cancel</button></div>`;
   }
 
@@ -334,6 +384,7 @@
       <div class="btnrow">${actionButtons(r.id, v.slot || "Extra", v.portion)}</div>
       ${r.user ? "" : `<div class="card"><div class="label">Batch size <small>each serving here is ${portionText(v.portion)}</small></div><div class="chips">${[1, 2, 4, 6, 8].map((k) => chip(k === 1 ? "1 serving" : k + " servings", cook === k, "cook", String(k))).join("")}</div>
       <p class="fine">Amounts are as bought: raw or dry weight.</p></div>`}
+      ${r.user && (r.files || []).length ? `<div class="card"><h3>📎 Photos &amp; files</h3><div class="thumbs big">${r.files.map((f) => f.type.startsWith("image/") ? `<a href="${f.data}" target="_blank" rel="noopener"><img src="${f.data}" alt="${esc(f.name)}"></a>` : `<a class="doc" href="${f.data}" download="${esc(f.name)}">📄 ${esc(f.name)}</a>`).join("")}</div>${hits.length === 0 && !r.ingLines.length ? `<p class="fine">Allergens can't be checked in photos. Please check the recipe yourself.</p>` : ""}</div>` : ""}
       <div class="card"><h3>🛒 Ingredients</h3><ul class="list">${ings}</ul>${!r.user && r.pantry && r.pantry.length ? `<p class="fine"><b>Pantry:</b> ${esc(r.pantry.join(", "))}</p>` : ""}</div>
       <div class="card"><h3>👩‍🍳 How to cook</h3>${steps || "<p class='muted'>No steps added.</p>"}</div>
       <div class="card"><h3>📦 Storing</h3>${st}</div>
@@ -359,22 +410,22 @@
   }
 
   function profile() {
+    const card = (title, ...bs) => `<div class="card"><h3>${title}</h3>${bs.map((b) => b()).join("")}</div>`;
     return `<div class="page"><div class="hero"><div class="eyebrow">Your profile</div><h1>${esc(state.profile.name || "Profile")}</h1><p>Change anything, then rebuild your plan.</p></div>
-      <div class="card"><h3>About you</h3>${body1()}</div>
-      <div class="card"><h3>Food profile</h3>${body2()}</div>
-      <div class="card"><h3>Goals</h3>${body3()}</div>
-      <div class="card"><h3>Targets &amp; plan length</h3>${body4()}</div>
+      ${card("About you", bodyBasics)}${card("Height &amp; weight", bodyMeasure)}${card("Ethnicity &amp; blood type", bodyEthno)}${card("Diet", bodyDiet)}${card("Allergies", bodyAllergies)}${card("Health conditions", bodyConditions)}
+      ${card("Body goal", bodyGoalStep)}${card("Vitamin boosts", bodyVitamins)}${card("Mineral boosts", bodyMinerals)}${card("Beauty &amp; aesthetics", bodyBeauty)}${card("Wellness", bodyWellness)}${card("Everyday eating", bodyLife)}
+      ${card("Targets &amp; plan length", body4)}
       <button class="btn" data-act="rebuild">✨ Save &amp; rebuild my plan</button>
       <button class="btn ghost danger" data-act="reset">Reset everything</button></div>`;
   }
 
   function top() {
-    return `<header class="top"><div class="brand">W.U.T.<span>'s Cooking</span><small>What's Ur Type?</small></div>${state.screen === "onboarding" ? "" : `<div class="pill">${esc(dietLabel())}</div>`}</header>`;
+    return `<header class="top"><div class="brand">W.U.T.<span>'s Cooking</span><small>What's Ur Type?</small></div>${state.screen === "onboarding" ? "" : `<button type="button" class="pill" data-act="go" data-arg="profile" title="Your diet. Tap to change it" aria-label="${esc(dietPillText())}. Tap to change your diet">${esc(dietPillText())}</button>`}</header>`;
   }
   function nav() {
     const cur = state.screen === "recipe" || state.screen === "add" ? "recipes" : state.screen;
-    const b = (id, ic, l) => `<button class="${cur === id ? "active" : ""}" data-act="go" data-arg="${id}" ${cur === id ? 'aria-current="page"' : ""}><i>${ic}</i>${l}</button>`;
-    return `<nav class="nav" aria-label="Main">${b("home", "🏠", "Home")}${b("plan", "📅", "Plan")}${b("recipes", "❤️", "Recipes")}${b("shop", "🛒", "Shop")}${b("profile", "😊", "Profile")}</nav>`;
+    const b = (id, ic, l) => `<button class="${cur === id ? "active" : ""}" data-act="go" data-arg="${id}" ${cur === id ? 'aria-current="page"' : ""} ${id === "nutty" ? 'aria-label="Getting Nutty"' : ""}><i>${ic}</i>${l}</button>`;
+    return `<nav class="nav" aria-label="Main">${b("home", "🏠", "Home")}${b("plan", "📅", "Plan")}${b("recipes", "❤️", "Recipes")}${b("shop", "🛒", "Shop")}${b("nutty", "🥜", "Nutty")}${b("profile", "😊", "Profile")}</nav>`;
   }
 
   function render(keep) {
@@ -384,13 +435,13 @@
     else {
       ensurePlan();
       if (state.screen === "recipe" && !(state.view && W.recipeById(state.view.rid, state))) state.screen = "home";
-      const map = { home, plan: planScreen, recipes, recipe: recipeView, add: addScreen, shop, profile };
+      const map = { home, plan: planScreen, recipes, recipe: recipeView, add: addScreen, shop, profile, nutty: () => W.nutty.view(state.nutty) };
       html = (map[state.screen] || home)();
     }
     $app.innerHTML = `<div class="shell">${top()}${html}${state.screen === "onboarding" ? "" : nav()}</div>`;
     window.scrollTo(0, keep ? y : 0);
   }
-  function go(screen) { state.screen = screen; save(); render(); }
+  function go(screen) { state.screen = screen; state.undo = null; save(); render(); }
 
   // ---------- actions ----------
   const toggleIn = (arr, v) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -427,8 +478,27 @@
   const ACT = {
     go: (a) => go(a),
     back: () => { state.step = Math.max(1, state.step - 1); save(); render(); },
-    next: () => { if (state.step < 4) { state.step++; save(); render(); } else finishOnboarding(); },
+    next: () => { if (state.step < NSTEPS) { state.step++; save(); render(); } else finishOnboarding(); },
     skip: () => ACT.next(),
+    skipall: () => finishOnboarding(),
+    swap: (a, el) => {
+      const day = Number(el.dataset.day), slot = el.dataset.slot;
+      const r = W.swapMeal(state, day, slot);
+      if (!r.ok) { toast(r.reason === "none" ? "No other safe option for that meal" : "Couldn't find that meal"); return; }
+      const nr = W.recipeById(r.after.rid, state);
+      state.undo = { day, slot, before: r.before, name: nr.name };
+      save(); render(true); toast("Swapped! 🔄");
+    },
+    undoSwap: () => {
+      const u = state.undo; if (!u) return;
+      const it = state.plan.items.find((i) => i.day === u.day && i.slot === u.slot);
+      if (it) { it.rid = u.before.rid; it.portion = u.before.portion; }
+      state.undo = null; save(); render(true); toast("Put it back ↩️");
+    },
+    nytoggle: (a) => { W.nutty.toggle(state.nutty, a); save(); render(true); },
+    nyunits: (a) => { W.nutty.units(state.nutty, a); save(); render(true); },
+    nyclear: (a) => { W.nutty.clear(state.nutty, a); save(); render(true); },
+    nyprofile: (a) => { W.nutty.fillFromProfile(state.nutty, a, state.profile); save(); render(true); toast("Filled in from your profile"); },
     units: (a) => {
       const p = state.profile;
       if (p.units === a) return;
@@ -464,9 +534,9 @@
     newplan: () => {
       const n = state.newLen === "custom" ? parseInt(state.newLenCustom, 10) : parseInt(state.newLen, 10);
       if (!(n >= 1)) { toast("Enter a number of days (1–60)"); return; }
-      makePlan(n); render(); toast("New plan ready ✨");
+      state.undo = null; makePlan(n); render(); toast("New plan ready ✨");
     },
-    rebuild: () => { makePlan(state.planLen); state.screen = "home"; save(); render(); toast("Plan rebuilt ✨"); },
+    rebuild: () => { state.undo = null; makePlan(state.planLen); state.screen = "home"; save(); render(); toast("Plan rebuilt ✨"); },
     reset: () => { if (confirm("Erase your profile, plan, recipes and food log from this device?")) { state = defaults(); save(); render(); } },
     ate: (a, el) => logMeal(el.dataset.rid, el.dataset.slot || "Extra", Number(el.dataset.portion) || 1),
     unlog: (a) => { state.log.splice(Number(a), 1); save(); render(true); },
@@ -491,12 +561,16 @@
       const d = state.draft, name = d.name.trim(), lines = (s) => s.split("\n").map((x) => x.trim()).filter(Boolean);
       const ing = lines(d.ingredients);
       if (!name) { toast("Give your recipe a name first"); return; }
-      if (!ing.length) { toast("Add at least one ingredient"); return; }
+      const steps = lines(d.steps);
+      if (!ing.length && !steps.length && !d.files.length) { toast("Add ingredients, steps, or a photo/file"); return; }
       const num = (v) => { const n = parseFloat(v); return n >= 0 ? n : 0; };
       const id = "u" + Date.now();
-      state.myRecipes.push({ id, user: true, name, meal: d.meal, emoji: SLOT_EMOJI[d.meal] || "🍽️", ingLines: ing, steps: lines(d.steps), storage: d.storage.trim(), nut: { cal: num(d.cal), p: num(d.p), c: num(d.c), f: num(d.f) } });
+      state.myRecipes.push({ id, user: true, name, meal: d.meal, emoji: SLOT_EMOJI[d.meal] || "🍽️", ingLines: ing, steps, storage: d.storage.trim(), files: d.files.slice(), nut: { cal: num(d.cal), p: num(d.p), c: num(d.c), f: num(d.f) } });
+      const ok = save();
+      if (!ok) { state.myRecipes.pop(); toast("Not enough storage for these files. Remove one and try again."); return; }
       state.draft = defaults().draft; state.filter = "all"; state.screen = "recipes"; save(); render(); toast("Recipe added to your cookbook ✅");
     },
+    rmFile: (a) => { state.draft.files.splice(Number(a), 1); save(); render(true); },
     delRecipe: (a, el) => {
       if (!confirm("Delete this recipe?")) return;
       const id = el.dataset.rid;
@@ -522,8 +596,39 @@
     const f = ACT[el.dataset.act];
     if (f) { e.preventDefault(); f(el.dataset.arg, el); }
   });
+  // ---- recipe uploads ----
+  const readFile = (file) => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
+  function shrinkImage(file) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 1000 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("bad image")); };
+      img.src = url;
+    });
+  }
+  async function addFiles(list) {
+    for (const file of Array.from(list)) {
+      if (state.draft.files.length >= MAX_FILES) { toast(`Up to ${MAX_FILES} files per recipe`); break; }
+      try {
+        let data, type = file.type || "application/octet-stream", name = file.name || "photo.jpg";
+        if (type.startsWith("image/")) { data = await shrinkImage(file); type = "image/jpeg"; name = name.replace(/\.[^.]+$/, "") + ".jpg"; }
+        else { if (file.size > MAX_FILE) { toast(`${name} is too big (max ${Math.round(MAX_FILE / 1e5) / 10} MB)`); continue; } data = await readFile(file); }
+        if (data.length > MAX_FILE * 1.4) { toast(`${name} is too big`); continue; }
+        state.draft.files.push({ name, type, data, size: file.size });
+      } catch (err) { toast("Couldn't read that file"); }
+    }
+    if (!save()) { state.draft.files.pop(); toast("Not enough storage for that file"); }
+    render(true);
+  }
   document.addEventListener("change", (e) => {
     const el = e.target;
+    if (el.matches && el.matches("input[type=file][data-file]")) { addFiles(el.files); return; }
+    if (el.dataset && el.dataset.ny !== undefined) { if (el.tagName === "SELECT" || el.type === "date" || el.type === "time") nyChange(el); return; }
     if (el.matches && el.matches("input[type=checkbox][data-act]")) { ACT[el.dataset.act](el.dataset.arg, el); return; }
     if (el.dataset && el.dataset.chg && ACT[el.dataset.chg]) { ACT[el.dataset.chg](el.value, el); return; }
     if (el.dataset && el.dataset.bind && el.tagName === "SELECT") {
@@ -531,8 +636,18 @@
       if (el.dataset.rr !== undefined) render(true);
     }
   });
+  function nyChange(el) {
+    const r = W.nutty.input(state.nutty, el);
+    save();
+    if (r === "rr") {
+      const isSearch = el.id === "nySearch", pos = isSearch ? el.selectionStart : 0;
+      render(true);
+      if (isSearch) { const n = document.getElementById("nySearch"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e2) { /* ignore */ } } }
+    } else { const box = document.getElementById("ny-res-" + r); if (box) box.innerHTML = W.nutty.resultHtml(state.nutty, r); }
+  }
   document.addEventListener("input", (e) => {
     const el = e.target;
+    if (el.dataset && el.dataset.ny !== undefined && el.tagName !== "SELECT") { nyChange(el); return; }
     if (el.dataset && el.dataset.bind && el.tagName !== "SELECT") { setPath(el.dataset.bind, el.value); save(); }
   });
   document.addEventListener("keydown", (e) => {

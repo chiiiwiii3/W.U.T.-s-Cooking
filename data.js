@@ -447,6 +447,53 @@
 
   W.BLOOD_TYPES = [["", "Choose..."], ["unknown", "I'm not sure"], ["O+", "O+"], ["O-", "O−"], ["A+", "A+"], ["A-", "A−"], ["B+", "B+"], ["B-", "B−"], ["AB+", "AB+"], ["AB-", "AB−"]];
   W.COMMON_ALLERGIES = ["peanuts", "tree nuts", "dairy", "eggs", "fish", "shellfish", "soy", "gluten", "sesame"];
+  // ---------- every vitamin & mineral ----------
+  // Nutrients with exact amounts in our food data (% of Daily Value, see ING.mi):
+  W.TRACKED = ["A", "C", "D", "B12", "Fe", "Ca", "K", "Mg"];
+  // For the rest we use well-known GOOD FOOD SOURCES (qualitative, not exact amounts).
+  W.SOURCES = {
+    B1: ["oats", "brownrice", "quinoa", "lentils", "blackbeans", "chickpeas", "bread", "peanutbutter", "tahini", "chia"],
+    B2: ["eggs", "greekyogurt", "feta", "mushrooms", "spinach", "salmon", "beef"],
+    B3: ["chickenbreast", "turkey", "tuna", "salmon", "beef", "peanutbutter", "mushrooms", "brownrice"],
+    B5: ["avocado", "mushrooms", "eggs", "chickenbreast", "greekyogurt", "sweetpotato", "lentils", "salmon", "beef", "broccoli"],
+    B6: ["banana", "chickpeas", "chickenbreast", "turkey", "salmon", "tuna", "beef", "sweetpotato", "avocado"],
+    B7: ["eggs", "salmon", "avocado", "sweetpotato", "walnuts", "peanutbutter"],
+    B9: ["spinach", "kale", "greens", "lentils", "chickpeas", "blackbeans", "avocado", "broccoli", "quinoa", "strawberries", "bread", "tortilla"],
+    E: ["avocado", "spinach", "oliveoil", "peanutbutter", "sweetpotato", "bellpepper"],
+    VK: ["kale", "spinach", "broccoli", "greens", "oliveoil", "avocado"],
+    Choline: ["eggs", "beef", "chickenbreast", "turkey", "salmon", "cod", "shrimp", "broccoli", "cauliflower", "quinoa", "tofu"],
+    Cr: ["broccoli", "banana", "oats", "bread", "beef", "turkey"],
+    Cu: ["mushrooms", "lentils", "chickpeas", "quinoa", "oats", "walnuts", "tahini", "shrimp", "chia", "tofu"],
+    I: ["cod", "shrimp", "tuna", "eggs", "greekyogurt", "feta", "salmon"],
+    Mn: ["oats", "brownrice", "quinoa", "chia", "spinach", "chickpeas", "lentils", "walnuts", "tofu", "blueberries"],
+    Mo: ["lentils", "blackbeans", "chickpeas", "oats", "quinoa", "brownrice", "tofu"],
+    P: ["salmon", "tuna", "chickenbreast", "turkey", "beef", "eggs", "greekyogurt", "lentils", "oats", "quinoa", "chia", "tofu", "peanutbutter"],
+    Se: ["tuna", "shrimp", "cod", "salmon", "eggs", "chickenbreast", "turkey", "beef", "brownrice"],
+    Zn: ["beef", "lentils", "chickpeas", "blackbeans", "quinoa", "oats", "tofu", "tahini", "peanutbutter", "chia", "shrimp", "turkey", "eggs"]
+  };
+  for (const k in W.SOURCES) for (const id of W.SOURCES[k]) { if (!ING[id]) throw new Error("bad source id " + id); (ING[id].gs = ING[id].gs || []).push(k); }
+  // Salty ingredients (used by the "keep sodium low" boost); number = how salty
+  const HI_NA = { soysauce: 2, feta: 1, tuna: 1, bread: 0.8, tortilla: 1 };
+  for (const id in HI_NA) ING[id].hiNa = HI_NA[id];
+
+  // [key, label, short benefit]
+  W.VITAMINS = [
+    ["A", "Vitamin A", "vision, skin, immunity"], ["B1", "Vitamin B1 (thiamin)", "energy from carbs, nerves"], ["B2", "Vitamin B2 (riboflavin)", "energy, skin, eyes"],
+    ["B3", "Vitamin B3 (niacin)", "energy, skin, digestion"], ["B5", "Vitamin B5 (pantothenic acid)", "energy, hormones"], ["B6", "Vitamin B6", "mood, brain, metabolism"],
+    ["B7", "Vitamin B7 (biotin)", "hair, skin, nails"], ["B9", "Vitamin B9 (folate)", "cell growth, pregnancy"], ["B12", "Vitamin B12", "energy, nerves, blood"],
+    ["C", "Vitamin C", "immunity, collagen, skin"], ["D", "Vitamin D", "bones, immunity, mood"], ["E", "Vitamin E", "skin, antioxidant"],
+    ["VK", "Vitamin K", "blood clotting, bones"], ["Choline", "Choline", "brain, liver, memory"]
+  ];
+  W.MINERALS = [
+    ["Ca", "Calcium", "bones, teeth, muscles"], ["Cr", "Chromium", "blood sugar balance"], ["Cu", "Copper", "iron use, collagen"], ["I", "Iodine", "thyroid, metabolism"],
+    ["Fe", "Iron", "energy, red blood cells"], ["Mg", "Magnesium", "sleep, muscles, nerves"], ["Mn", "Manganese", "bones, metabolism"], ["Mo", "Molybdenum", "enzymes, detox"],
+    ["P", "Phosphorus", "bones, energy"], ["K", "Potassium", "blood pressure, muscles"], ["Se", "Selenium", "thyroid, antioxidant"], ["Zn", "Zinc", "immunity, skin, healing"],
+    ["Na", "Lower sodium", "keeps meals low in salt"]
+  ];
+  W.OTHER_NUTRIENTS = [["o3", "Omega-3", "heart, brain, skin"], ["fiber", "Fiber", "digestion, fullness"]];
+  W.NUTRIENT_LABEL = Object.fromEntries([...W.VITAMINS, ...W.MINERALS, ...W.OTHER_NUTRIENTS].map(([k, l]) => [k, l]));
+  Object.assign(W.MICRO_LABELS, { B1: "Vitamin B1", B2: "Vitamin B2", B3: "Vitamin B3", B5: "Vitamin B5", B6: "Vitamin B6", B7: "Biotin", B9: "Folate", E: "Vitamin E", VK: "Vitamin K", Choline: "Choline", Cr: "Chromium", Cu: "Copper", I: "Iodine", Mn: "Manganese", Mo: "Molybdenum", P: "Phosphorus", Se: "Selenium", Zn: "Zinc" });
+
   W.ETHNICITIES = [
     "American Indian or Alaska Native", "Arab / Middle Eastern", "Black / African American", "African (Sub-Saharan)",
     "Caribbean", "East Asian (Chinese, Japanese, Korean...)", "South Asian (Indian, Pakistani, Bangladeshi...)",
@@ -479,7 +526,7 @@
       ["lose", "Lose weight"], ["lose_slow", "Lose weight slowly & gently"], ["gain", "Gain weight"], ["muscle", "Build muscle"],
       ["recomp", "Lose fat & build muscle"], ["endurance", "Fuel endurance / athletic performance"], ["maintain", "Maintain my weight"], ["healthy", "Just eat healthier (no weight goal)"]
     ],
-    micros: [["A", "Vitamin A"], ["C", "Vitamin C"], ["D", "Vitamin D"], ["B12", "Vitamin B12"], ["Fe", "Iron"], ["Ca", "Calcium"], ["K", "Potassium"], ["Mg", "Magnesium"], ["o3", "Omega-3"], ["fiber", "Fiber"]],
+    micros: [...W.VITAMINS, ...W.MINERALS, ...W.OTHER_NUTRIENTS].map(([k, l]) => [k, l]),
     beauty: [
       ["skin", "Glowing skin"], ["clear", "Clearer skin"], ["aging", "Anti-aging / fewer wrinkles"], ["tone", "Even skin tone"], ["hydrate", "Hydrated, dewy skin"],
       ["hair", "Hair growth"], ["shine", "Shiny, healthy hair"], ["nails", "Strong nails"], ["eyes", "Bright, healthy eyes"], ["teeth", "Healthy teeth & gums"], ["puffy", "Less puffiness & bloating"]
