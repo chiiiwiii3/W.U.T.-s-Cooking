@@ -5,8 +5,9 @@
 A mobile-first meal-prep and recipe app (installable PWA). Tell it about yourself and your goals, and it builds a breakfast / lunch / dinner plan for a day, a week, a month or any number of days, with recipes, storage tips and a shopping list.
 
 ## Features
-- **13 short setup screens**, one category each (basics, measurements, ethnicity & blood type, diet, allergies, health conditions, body goal, vitamins, minerals, beauty, wellness, everyday eating, targets). Every screen has Back and Skip, plus "Skip the rest and build my plan"
-- **Profile:** name, birthday, age, sex, height, weight (US or metric), ethnicity, blood type (incl. "I'm not sure"), allergies, diet and health conditions. Every question is a dropdown with an optional type-in box underneath, and a typed value wins over the dropdown
+- **Pregnancy & menstrual-cycle catering** (appears when you pick female): pregnancy by trimester, breastfeeding, trying to conceive, menopause, or your cycle phase. Add your last period date and each plan day follows your cycle automatically
+- **13 short setup screens** (14 for female), one category each (basics, measurements, ethnicity & blood type, diet, allergies, health conditions, body goal, vitamins, minerals, beauty, wellness, everyday eating, targets). Every screen has Back and Skip, plus "Skip the rest and build my plan"
+- **Profile:** name, birthday, age, sex, height, weight (US or metric), ethnicity, blood type (incl. "I'm not sure"), allergies, diet and health conditions. Height and weight are dropdowns; ethnicity and diet also have an optional type-in box, and a typed value wins over the dropdown
 - **114 health conditions** in a grouped dropdown (heart, diabetes, digestive, thyroid, pregnancy, mental health and more) plus a type-in box. Celiac disease and lactose intolerance automatically exclude gluten and dairy
 - **18 diet options** including "I'm not sure", vegan, vegetarian, pescatarian, keto, paleo, Mediterranean, gluten-free, dairy-free, halal, kosher and **Blood type diet**
 - **Allergies are always a hard rule.** Pick from the list or type your own (e.g. kiwi)

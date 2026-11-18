@@ -247,6 +247,31 @@
     return b === "healthy" ? "maintain" : b;
   }
 
+  // ---------- pregnancy & menstrual cycle (only when sex = female) ----------
+  const isFemale = (pr) => pr.sex === "female";
+  const CYCLE_NAMES = { menstrual: "period (menstrual phase)", follicular: "after your period (follicular phase)", ovulation: "around ovulation", luteal: "before your period (luteal phase)" };
+  // Which phase are we in on plan day `off`? A last-period date makes it automatic; otherwise the phase you picked.
+  function cycleInfo(pr, off = 0) {
+    if (!isFemale(pr) || pr.repro === "pregnant" || pr.repro === "breastfeeding" || pr.repro === "menopause") return null;
+    const len = clamp(parseInt(pr.cycleLen, 10) || 28, 21, 40);
+    if (pr.periodDate && /^\d{4}-\d{2}-\d{2}$/.test(pr.periodDate)) {
+      const now = new Date(); now.setDate(now.getDate() + off);
+      const since = daysBetween(pr.periodDate, ymd(now));
+      if (since >= 0 && since < 400) {
+        const d = since % len, ov = len - 14;
+        const phase = d < 5 ? "menstrual" : d < ov - 1 ? "follicular" : d <= ov + 1 ? "ovulation" : "luteal";
+        return { phase, day: d + 1, len, name: CYCLE_NAMES[phase], auto: true };
+      }
+    }
+    return CYCLE_NAMES[pr.cycle] ? { phase: pr.cycle, name: CYCLE_NAMES[pr.cycle], auto: false } : null;
+  }
+  const reproCal = (pr) => {
+    if (!isFemale(pr)) return 0;
+    if (pr.repro === "pregnant") return { 2: 340, 3: 450 }[pr.trimester] || 0;
+    if (pr.repro === "breastfeeding") return 330;
+    return 0;
+  };
+
   // ---------- targets ----------
   function estimateCalories(st) {
     const pr = st.profile, age = effAge(pr), { kg, cm } = toMetric(pr);
@@ -273,7 +298,7 @@
     const diet = effDiet(st.profile), body = bodyGoal(st);
     let cal = num(tg.cal);
     const userCal = cal > 0;
-    if (!userCal) cal = est.cal;
+    if (!userCal) { cal = est.cal + reproCal(st.profile); const ci = cycleInfo(st.profile); if (ci && ci.phase === "luteal") cal += 100; }
     let ratio = { p: 0.2, c: 0.45, f: 0.35 };
     if (body === "muscle" || body === "gain") ratio = { p: 0.25, c: 0.45, f: 0.3 };
     if (body === "lose" || body === "lose_slow") ratio = { p: 0.28, c: 0.37, f: 0.35 };
@@ -292,12 +317,15 @@
       notes: [...est.notes]
     };
     if (condFlags(st.profile.conditions).ed) out.notes.push("Because of your eating-disorder history we won't use weight-loss targets. Please build your meal plan together with your care team.");
+    const pr = st.profile;
+    if (isFemale(pr) && pr.repro === "pregnant") out.notes.push("Pregnancy: we favor folate, iron, calcium, choline, iodine and omega-3, and steer away from tuna and feta. Always use pasteurized dairy, cook fish and eggs through, and check your plan with your doctor or midwife." + (reproCal(pr) ? ` We added about ${reproCal(pr)} kcal for your trimester.` : ""));
+    if (isFemale(pr) && pr.repro === "breastfeeding") out.notes.push("Breastfeeding: we added about 330 kcal and favor calcium, iodine, choline and omega-3. Check your plan with your doctor.");
     if (out.cal < 1200) out.notes.push("Targets under 1,200 kcal a day should only be followed with a doctor or dietitian.");
     return out;
   }
 
   // ---------- scoring (soft preferences) ----------
-  function goalWeights(st) {
+  function goalWeights(st, off = 0) {
     const g = st.goals, w = { micro: {}, src: {}, lowNa: 0, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0, fast: 0, simple: 0, meatless: 0, veg: 0, budget: 0 };
     const add = (k, v) => { if (W.TRACKED.includes(k)) w.micro[k] = (w.micro[k] || 0) + v; else if (k === "Na") w.lowNa += v; else w.src[k] = (w.src[k] || 0) + v; };
     (g.micros || []).forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
@@ -335,6 +363,22 @@
       recovery: () => { w.protein += 0.5; add("Mg", 0.8); add("K", 0.8); },
       metabolism: () => { w.protein += 0.4; w.fiber += 0.3; add("Fe", 0.5); }
     };
+    const pr = st.profile;
+    if (isFemale(pr)) {
+      if (pr.repro === "pregnant") { add("B9", 2); add("Fe", 1.5); add("Ca", 1); add("Choline", 1.2); add("I", 1); add("D", 0.8); add("Mg", 0.5); w.o3 += 1; w.fiber += 0.3; w.preg = 1; }
+      else if (pr.repro === "breastfeeding") { add("Ca", 1); add("I", 1); add("Choline", 1); add("B12", 0.8); add("D", 0.8); w.o3 += 1; w.protein += 0.3; }
+      else if (pr.repro === "menopause") { add("Ca", 1.2); add("D", 1); add("Mg", 0.8); w.protein += 0.3; }
+      else {
+        if (pr.repro === "trying") { add("B9", 2); add("Fe", 1); add("Zn", 1); add("D", 0.8); w.o3 += 1; }
+        const ci = cycleInfo(pr, off);
+        if (ci) ({
+          menstrual: () => { add("Fe", 1.5); add("C", 0.8); add("Mg", 0.8); w.o3 += 0.5; },
+          follicular: () => { w.protein += 0.2; w.fiber += 0.3; add("B9", 0.5); },
+          ovulation: () => { w.fiber += 0.5; add("C", 0.8); add("Zn", 0.8); },
+          luteal: () => { add("Mg", 1.2); add("Ca", 0.8); add("B6", 0.8); w.fiber += 0.3; }
+        })[ci.phase]();
+      }
+    }
     (g.beauty || []).forEach((b) => BEAUTY[b] && BEAUTY[b]());
     (g.wellness || []).forEach((x) => WELL[x] && WELL[x]());
     (g.lifestyle || []).forEach((x) => {
@@ -404,6 +448,7 @@
     if (W_.meatless) s += (r.tags.vegetarian ? 4 : -4) * W_.meatless;
     if (W_.veg) s += Math.min(5, r.nVeg) * 1.2 * W_.veg;
     if (W_.budget) s -= r.pricey * 3 * W_.budget;
+    if (W_.preg) { if (r.ids.includes("tuna")) s -= 6; if (r.ids.includes("feta")) s -= 4; }
     return s;
   }
 
@@ -429,7 +474,7 @@
     const days = clamp(Math.round(st.planLen || 7), 1, 60);
     const seed = opts.seed != null ? opts.seed : (Date.now() ^ ((Math.random() * 1e9) | 0)) & 0x7fffffff;
     const rnd = mulberry32(seed);
-    const T = resolveTargets(st), W_ = goalWeights(st);
+    const T = resolveTargets(st);
     const slots = ["Breakfast", "Lunch", "Dinner"];
     const pools = {};
     for (const slot of slots) pools[slot] = RECIPES.filter((r) => r.meal === slot && recipeAllowed(r, st));
@@ -437,6 +482,7 @@
     const items = [], missing = [];
     for (const slot of slots) if (!pools[slot].length) missing.push(slot);
     for (let d = 0; d < days; d++) {
+      const W_ = goalWeights(st, d);
       for (const slot of slots) {
         const pool = pools[slot];
         if (!pool.length) continue;
@@ -458,7 +504,7 @@
     const plan = st.plan;
     const it = plan && plan.items.find((i) => i.day === dayIdx && i.slot === slot);
     if (!it) return { ok: false, reason: "missing" };
-    const T = resolveTargets(st), W_ = goalWeights(st), rnd = mulberry32(opts.seed != null ? opts.seed : (Date.now() ^ ((Math.random() * 1e9) | 0)) & 0x7fffffff);
+    const T = resolveTargets(st), W_ = goalWeights(st, dayIdx), rnd = mulberry32(opts.seed != null ? opts.seed : (Date.now() ^ ((Math.random() * 1e9) | 0)) & 0x7fffffff);
     const pool = RECIPES.filter((r) => r.meal === slot && r.id !== it.rid && recipeAllowed(r, st));
     if (!pool.length) return { ok: false, reason: "none" };
     const usage = {};
@@ -552,6 +598,6 @@
   Object.assign(W, {
     clamp, ymd, daysBetween, recipeById, nutr, richIn, allergyHits, dietAllows, recipeAllowed,
     resolveTargets, generatePlan, planPosition, shoppingList, fmtFrac, fmtG, fmtMl,
-    fmtRecipeLine, fmtShopQty, goalWeights, abo, swapMeal, goalMatches, effAge, effDiet, effBlood, effAllergies, condFlags, toMetric, parseHeightText, bodyGoal
+    fmtRecipeLine, fmtShopQty, goalWeights, cycleInfo, abo, swapMeal, goalMatches, effAge, effDiet, effBlood, effAllergies, condFlags, toMetric, parseHeightText, bodyGoal
   });
 })(globalThis);

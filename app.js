@@ -15,7 +15,7 @@
   function defaults() {
     return {
       v: 3, screen: "onboarding", step: 1, view: null, back: "home",
-      profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
+      profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", repro: "", trimester: "", cycle: "", periodDate: "", cycleLen: "28", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
       goals: { body: "", micros: [], beauty: [], wellness: [], lifestyle: [] },
       targets: { cal: "", p: "", c: "", f: "" },
       planLen: 7, lenCustom: false,
@@ -31,7 +31,8 @@
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
       if (s && s.v === 3) {
-        if (s.profile) { s.profile.ageTxt = ""; s.profile.sexTxt = ""; s.profile.bloodTypeTxt = ""; }
+        if (s.profile) { s.profile.ageTxt = ""; s.profile.sexTxt = ""; s.profile.bloodTypeTxt = "";
+          const wt = parseFloat(s.profile.weightTxt); if (wt > 0 && !s.profile.weight) s.profile.weight = String(Math.round(wt)); s.profile.weightTxt = ""; s.profile.heightTxt = ""; }
         for (const k in s) d[k] = d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && s[k] && typeof s[k] === "object" ? Object.assign(d[k], s[k]) : s[k];
       }
     } catch (e) { /* first run or storage blocked */ }
@@ -106,16 +107,32 @@
         ${bdNote}</div>
       ${sel("Age", "profile.age", ageOpts(), true)}
       <p class="hint">If you add your birthday we'll use it for your age.</p>
-      ${sel("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]])}
+      ${sel("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]], true)}
+      ${state.profile.sex === "female" ? `<p class="hint">🌸 Since you picked female, you'll get a short extra screen for pregnancy and your menstrual cycle. It's optional.</p>` : ""}
       <p class="hint">Everything here is optional, and it stays on your device.</p>`;
   }
   function bodyMeasure() {
     const p = state.profile, us = p.units === "us";
     return `
       <div class="seg" role="group" aria-label="Units">${chip("US (lb, ft/in)", us, "units", "us")}${chip("Metric (kg, cm)", !us, "units", "metric")}</div>
-      ${combo("Height", "profile.heightSel", heightOpts(us), "profile.heightTxt", { rr: true, ph: us ? `e.g. 5'6" or 168 cm` : "e.g. 168 or 1.68 m" })}
-      ${combo(us ? "Weight (lb)" : "Weight (kg)", "profile.weight", weightOpts(us), "profile.weightTxt", { rr: true, ph: us ? "e.g. 152.5" : "e.g. 69.5", type: "number" })}
+      ${sel("Height", "profile.heightSel", heightOpts(us), true)}
+      ${sel(us ? "Weight (lb)" : "Weight (kg)", "profile.weight", weightOpts(us), true)}
       <p class="hint">Used only to estimate calories and portions. Skip it if you'd rather not say.</p>`;
+  }
+  function bodyRepro() {
+    const p = state.profile, ci = W.cycleInfo(p), preg = p.repro === "pregnant";
+    const cyc = !["pregnant", "breastfeeding", "menopause"].includes(p.repro);
+    return `
+      ${sel("Is any of this true right now?", "profile.repro", [["", "None of these"], ["pregnant", "I'm pregnant"], ["breastfeeding", "I'm breastfeeding"], ["trying", "Trying to conceive"], ["menopause", "Perimenopause / menopause"]], true)}
+      ${preg ? `${sel("Trimester", "profile.trimester", [["", "Not sure"], ["1", "First (weeks 1–13)"], ["2", "Second (weeks 14–27)"], ["3", "Third (week 28 on)"]], true)}
+        <div class="note soft">🤰 We'll favor folate, iron, calcium, choline, iodine and omega-3 and steer away from tuna and feta. Please check your plan with your doctor or midwife.</div>` : ""}
+      ${p.repro === "breastfeeding" ? `<div class="note soft">🍼 We'll add calories and favor calcium, iodine, choline and omega-3.</div>` : ""}
+      ${cyc ? `<div class="group"><div class="label">Menstrual cycle <small>optional</small></div>
+        ${sel("Where are you in your cycle?", "profile.cycle", [["", "Not tracking / skip"], ["menstrual", "On my period"], ["follicular", "After my period"], ["ovulation", "Around ovulation"], ["luteal", "Before my period (PMS)"]], true)}
+        ${inp("First day of your last period", "profile.periodDate", { type: "date" })}
+        ${sel("Usual cycle length", "profile.cycleLen", rng(21, 40).map((n) => [String(n), n + " days" + (n === 28 ? " (typical)" : "")]), true)}
+        <p class="hint">Add the date and each day of your plan follows your cycle on its own (iron and C during your period, magnesium and calcium before it). Otherwise we use the phase you picked.</p>
+        ${ci ? `<div class="note soft">🌸 Today you're ${esc(ci.name)}${ci.auto ? ` (day ${ci.day})` : ""}.</div>` : ""}</div>` : ""}`;
   }
   function bodyEthno() {
     const p = state.profile;
@@ -200,6 +217,7 @@
     { e: "Diet", t: "How do you like to eat?", s: "Vegan, keto, blood type diet… or “I'm not sure”.", b: bodyDiet },
     { e: "Allergies", t: "Anything to avoid?", s: "We will never put these in your meals.", b: bodyAllergies },
     { e: "Health", t: "Health conditions", s: "Optional. Pick any that apply so meals can fit you.", b: bodyConditions },
+    { e: "Her health", t: "Pregnancy & cycle", s: "Optional. We'll cater meals to where you are.", b: bodyRepro, show: () => state.profile.sex === "female" },
     { e: "Goals", t: "Your body goal", s: "One main goal, or skip.", b: bodyGoalStep },
     { e: "Vitamins", t: "Vitamin boosts", s: "Pick the vitamins you want more of.", b: bodyVitamins },
     { e: "Minerals", t: "Mineral boosts", s: "Minerals, omega-3 and fiber.", b: bodyMinerals },
@@ -208,11 +226,12 @@
     { e: "Everyday", t: "Everyday eating", s: "Quick, simple, budget, more veggies, fish and more.", b: bodyLife },
     { e: "Nutrition & length", t: "Almost ready!", s: "Targets are optional, so skip if you're unsure.", b: body4 }
   ];
-  const NSTEPS = STEPS.length;
+  const visSteps = () => STEPS.filter((x) => !x.show || x.show());
   function onboarding() {
-    const n = Math.min(NSTEPS, Math.max(1, Number(state.step) || 1)), i = STEPS[n - 1];
+    const VS = visSteps(), NSTEPS = VS.length;
+    const n = Math.min(NSTEPS, Math.max(1, Number(state.step) || 1)), i = VS[n - 1];
     return `<div class="page">
-      <div class="steps" role="img" aria-label="Step ${n} of ${NSTEPS}">${STEPS.map((_, k) => `<i class="${k < n ? "on" : ""}"></i>`).join("")}</div>
+      <div class="steps" role="img" aria-label="Step ${n} of ${NSTEPS}">${VS.map((_, k) => `<i class="${k < n ? "on" : ""}"></i>`).join("")}</div>
       <p class="stepcount">Step ${n} of ${NSTEPS}</p>
       <div class="hero hasmascot">${mascot()}<div class="eyebrow">${i.e}</div><h1>${i.t}</h1><p>${i.s}</p></div>
       <div class="card">${i.b()}</div>
@@ -279,6 +298,7 @@
       <p>Day ${pos.idx + 1} of your ${plan.days}-day meal prep.</p></div>
       ${pos.over ? `<div class="note">Your ${plan.days}-day plan has finished, so we're repeating it. Tap <b>New plan</b> below for fresh meals.</div>` : ""}
       ${missingNotes()}${undoBar()}
+      ${(() => { const p = state.profile, ci = W.cycleInfo(p, pos.idx); return p.repro === "pregnant" ? `<div class="note soft">🤰 Meals today lean on folate, iron, calcium and choline. Please check your plan with your doctor or midwife.</div>` : ci ? `<div class="note soft">🌸 Today you're ${esc(ci.name)}. Meals lean on what helps at this point.</div>` : ""; })()}
       <div class="card ringcard">
         <div class="ring" style="--pct:${pct}%" role="img" aria-label="${Math.round(eaten.cal)} of ${T.cal} calories eaten"><div class="inside"><strong>${Math.round(eaten.cal)}</strong><small>of ${T.cal} kcal eaten</small></div></div>
         <p class="center muted">Planned today: ${Math.round(planned.cal)} kcal · ${Math.round(planned.p)}g protein${T.estimated ? " · target estimated from your profile" : ""}</p>
@@ -414,7 +434,7 @@
   function profile() {
     const card = (title, ...bs) => `<div class="card"><h3>${title}</h3>${bs.map((b) => b()).join("")}</div>`;
     return `<div class="page"><div class="hero"><div class="eyebrow">Your profile</div><h1>${esc(state.profile.name || "Profile")}</h1><p>Change anything, then rebuild your plan.</p></div>
-      ${card("About you", bodyBasics)}${card("Height &amp; weight", bodyMeasure)}${card("Ethnicity &amp; blood type", bodyEthno)}${card("Diet", bodyDiet)}${card("Allergies", bodyAllergies)}${card("Health conditions", bodyConditions)}
+      ${card("About you", bodyBasics)}${card("Height &amp; weight", bodyMeasure)}${card("Ethnicity &amp; blood type", bodyEthno)}${card("Diet", bodyDiet)}${card("Allergies", bodyAllergies)}${card("Health conditions", bodyConditions)}${state.profile.sex === "female" ? card("Pregnancy &amp; cycle", bodyRepro) : ""}
       ${card("Body goal", bodyGoalStep)}${card("Vitamin boosts", bodyVitamins)}${card("Mineral boosts", bodyMinerals)}${card("Beauty &amp; aesthetics", bodyBeauty)}${card("Wellness", bodyWellness)}${card("Everyday eating", bodyLife)}
       ${card("Targets &amp; plan length", body4)}
       <button class="btn" data-act="rebuild">✨ Save &amp; rebuild my plan</button>
@@ -480,7 +500,7 @@
   const ACT = {
     go: (a) => go(a),
     back: () => { state.step = Math.max(1, state.step - 1); save(); render(); },
-    next: () => { if (state.step < NSTEPS) { state.step++; save(); render(); } else finishOnboarding(); },
+    next: () => { if (state.step < visSteps().length) { state.step++; save(); render(); } else finishOnboarding(); },
     skip: () => ACT.next(),
     skipall: () => finishOnboarding(),
     swap: (a, el) => {
