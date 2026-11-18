@@ -31,6 +31,7 @@
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
       if (s && s.v === 3) {
+        if (s.profile) { s.profile.ageTxt = ""; s.profile.sexTxt = ""; s.profile.bloodTypeTxt = ""; }
         for (const k in s) d[k] = d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && s[k] && typeof s[k] === "object" ? Object.assign(d[k], s[k]) : s[k];
       }
     } catch (e) { /* first run or storage blocked */ }
@@ -103,9 +104,9 @@
       <div class="group"><div class="label">Birthday <small>optional</small></div>
         <div class="grid3">${selBare("profile.bdM", withChoose(MONTHS.map((m, i) => [String(i + 1), m]), "Month"), "Birth month")}${selBare("profile.bdD", withChoose(rng(1, 31).map((n) => [String(n), String(n)]), "Day"), "Birth day")}${selBare("profile.bdY", withChoose(rng(yr - 110, yr).reverse().map((n) => [String(n), String(n)]), "Year"), "Birth year")}</div>
         ${bdNote}</div>
-      ${combo("Age", "profile.age", ageOpts(), "profile.ageTxt", { rr: true, ph: "e.g. 34", type: "number" })}
+      ${sel("Age", "profile.age", ageOpts(), true)}
       <p class="hint">If you add your birthday we'll use it for your age.</p>
-      ${combo("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]], "profile.sexTxt", { ph: "Anything else you'd like us to know" })}
+      ${sel("Sex (used for calorie estimates)", "profile.sex", [["", "Prefer not to say"], ["female", "Female"], ["male", "Male"], ["other", "Other / non-binary"]])}
       <p class="hint">Everything here is optional, and it stays on your device.</p>`;
   }
   function bodyMeasure() {
@@ -120,7 +121,7 @@
     const p = state.profile;
     return `
       ${combo("Ethnicity", "profile.ethnicity", withChoose(W.ETHNICITIES.map((e) => [e, e])), "profile.ethnicityTxt", { rr: true, ph: "Describe it your way" })}
-      ${combo("Blood type", "profile.bloodType", W.BLOOD_TYPES, "profile.bloodTypeTxt", { rr: true, ph: "e.g. AB negative" })}
+      ${sel("Blood type", "profile.bloodType", W.BLOOD_TYPES, true)}
       <p class="hint">Everything here is optional, and it stays on your device.</p>`;
   }
   function condDropdown() {
@@ -146,6 +147,7 @@
         <div class="chips">${COMMON.map((a) => chip(a, p.allergies.includes(a), "allergy", a)).join("")}</div>
         <div class="addrow"><input id="allergyInput" type="text" placeholder="Other allergy? Type it (e.g. kiwi)" autocomplete="off" aria-label="Add another allergy"><button type="button" class="btn small" data-act="addAllergy">Add</button></div>
         ${custom.length ? `<div class="chips">${custom.map((a) => `<button type="button" class="chip on removable" data-act="rmAllergy" data-arg="${esc(a)}" aria-label="Remove ${esc(a)}">${esc(a)} ✕</button>`).join("")}</div>` : ""}
+        <p class="hint">Tap any that apply. Not listed? Type it below.</p>
         ${extraAllergy.length ? `<p class="hint">Also avoiding: ${esc(extraAllergy.join(", "))}.</p>` : ""}
       </div>`;
   }
@@ -203,7 +205,7 @@
     { e: "Minerals", t: "Mineral boosts", s: "Minerals, omega-3 and fiber.", b: bodyMinerals },
     { e: "Beauty", t: "Beauty & aesthetics", s: "Skin, hair, nails and glow.", b: bodyBeauty },
     { e: "Wellness", t: "Wellness goals", s: "Energy, sleep, mood and more.", b: bodyWellness },
-    { e: "Everyday", t: "Everyday eating", s: "Quick meals, more plants, extra protein.", b: bodyLife },
+    { e: "Everyday", t: "Everyday eating", s: "Quick, simple, budget, more veggies, fish and more.", b: bodyLife },
     { e: "Nutrition & length", t: "Almost ready!", s: "Targets are optional, so skip if you're unsure.", b: body4 }
   ];
   const NSTEPS = STEPS.length;

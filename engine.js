@@ -48,6 +48,8 @@
     r.gsCount = {};
     gs.forEach((g) => (g.gs || []).forEach((k) => { r.gsCount[k] = (r.gsCount[k] || 0) + 1; }));
     r.na = gs.reduce((n, g) => n + (g.hiNa || 0), 0);
+    r.nVeg = gs.filter((g) => g.cat === "Produce").length;
+    r.pricey = gs.filter((g) => ["salmon", "beef", "shrimp", "walnuts", "feta"].some((k) => ING[k] === g)).length;
     r.tags = {
       vegan: !(meat || fish || shell || dairy || egg),
       vegetarian: !(meat || fish || shell),
@@ -101,6 +103,15 @@
     if (/gluten|wheat|celiac|coeliac|barley|\brye\b/.test(a)) cats.add("gluten");
     if (/sesame|tahini/.test(a)) cats.add("sesame");
     const words = new Set();
+    const SYN = [
+      [/citrus/, ["lemon", "lime", "orange", "grapefruit"]], [/nightshade/, ["tomato", "pepper", "eggplant", "potato"]],
+      [/poultry/, ["chicken", "turkey", "duck"]], [/red meat|mammal|alpha/, ["beef", "pork", "lamb"]],
+      [/allium|onion|garlic/, ["onion", "garlic", "shallot", "leek"]], [/legume/, ["lentil", "chickpea", "bean", "pea "]],
+      [/berr/, ["blueberr", "strawberr", "raspberr", "blackberr"]], [/\bseeds?\b/, ["chia", "flax", "sunflower seed", "pumpkin seed", "hemp"]],
+      [/corn|maize/, ["corn", "polenta", "cornmeal"]], [/coconut/, ["coconut"]], [/\boats?\b/, ["oat"]], [/mustard/, ["mustard"]],
+      [/celery/, ["celery", "celeriac"]], [/sulfite|sulphite/, ["wine", "dried apricot"]], [/lupin/, ["lupin"]], [/\bpork\b/, ["pork", "bacon", "ham"]]
+    ];
+    for (const [re, ws] of SYN) if (re.test(a)) ws.forEach((x) => words.add(x));
     if (a.length >= 3) {
       words.add(a);
       words.add(a.replace(/ies$/, "y"));
@@ -287,7 +298,7 @@
 
   // ---------- scoring (soft preferences) ----------
   function goalWeights(st) {
-    const g = st.goals, w = { micro: {}, src: {}, lowNa: 0, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0 };
+    const g = st.goals, w = { micro: {}, src: {}, lowNa: 0, fiber: 0, protein: 0, o3: 0, netcarb: 0, quick: 0, plants: 0, fast: 0, simple: 0, meatless: 0, veg: 0, budget: 0 };
     const add = (k, v) => { if (W.TRACKED.includes(k)) w.micro[k] = (w.micro[k] || 0) + v; else if (k === "Na") w.lowNa += v; else w.src[k] = (w.src[k] || 0) + v; };
     (g.micros || []).forEach((m) => { if (m === "o3") w.o3 += 2; else if (m === "fiber") w.fiber += 0.6; else add(m, 1.5); });
     const BEAUTY = {
@@ -326,7 +337,12 @@
     };
     (g.beauty || []).forEach((b) => BEAUTY[b] && BEAUTY[b]());
     (g.wellness || []).forEach((x) => WELL[x] && WELL[x]());
-    (g.lifestyle || []).forEach((x) => { if (x === "quick") w.quick += 1; if (x === "plants") w.plants += 1; if (x === "hiprot") w.protein += 0.9; });
+    (g.lifestyle || []).forEach((x) => {
+      if (x === "quick") w.quick += 1; if (x === "plants") w.plants += 1; if (x === "hiprot") w.protein += 0.9;
+      if (x === "fastest") w.fast += 1; if (x === "simple") w.simple += 1; if (x === "meatless") w.meatless += 1;
+      if (x === "veggies") w.veg += 1; if (x === "budget") w.budget += 1;
+      if (x === "fiber") w.fiber += 0.8; if (x === "lowcarb") w.netcarb += 0.12; if (x === "fish") w.o3 += 1;
+    });
     for (const c of st.profile.conditions || []) {
       const s = c.toLowerCase();
       if (/diabetes|insulin|metabolic|pcos|obesity/.test(s)) { w.fiber += 0.4; w.netcarb += 0.08; }
@@ -383,6 +399,11 @@
     if (W_.lowNa) s -= W_.lowNa * r.na * 2.2;
     if (W_.quick && r.time) s += r.time <= 25 ? 3 * W_.quick : -Math.min(4, (r.time - 25) / 6) * W_.quick;
     if (W_.plants) s += (r.tags.vegan ? 3 : r.tags.vegetarian ? 2 : 0) * W_.plants;
+    if (W_.fast && r.time) s += r.time <= 15 ? 4 * W_.fast : -Math.min(5, (r.time - 15) / 5) * W_.fast;
+    if (W_.simple) s += (r.ing.length <= 6 ? 3 : r.ing.length <= 8 ? 1 : -Math.min(4, r.ing.length - 8)) * W_.simple;
+    if (W_.meatless) s += (r.tags.vegetarian ? 4 : -4) * W_.meatless;
+    if (W_.veg) s += Math.min(5, r.nVeg) * 1.2 * W_.veg;
+    if (W_.budget) s -= r.pricey * 3 * W_.budget;
     return s;
   }
 

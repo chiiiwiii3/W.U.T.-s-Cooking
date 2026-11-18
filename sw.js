@@ -1,5 +1,5 @@
 // Network-first for the app files (so updates show up), cache fallback for offline use.
-const CACHE = "wuts-cooking-v7";
+const CACHE = "wuts-cooking-v8";
 const FILES = ["./", "./index.html", "./styles.css", "./data.js", "./engine.js", "./calc.js", "./nutty.js", "./app.js", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/wut-squirrel.webp"];
 
 self.addEventListener("install", (e) => {

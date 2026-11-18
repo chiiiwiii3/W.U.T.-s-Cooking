@@ -446,7 +446,8 @@
   };
 
   W.BLOOD_TYPES = [["", "Choose..."], ["unknown", "I'm not sure"], ["O+", "O+"], ["O-", "O−"], ["A+", "A+"], ["A-", "A−"], ["B+", "B+"], ["B-", "B−"], ["AB+", "AB+"], ["AB-", "AB−"]];
-  W.COMMON_ALLERGIES = ["peanuts", "tree nuts", "dairy", "eggs", "fish", "shellfish", "soy", "gluten", "sesame"];
+  W.COMMON_ALLERGIES = ["peanuts", "tree nuts", "dairy", "eggs", "fish", "shellfish", "soy", "gluten", "sesame",
+    "wheat", "corn", "mustard", "celery", "sulfites", "lupin", "coconut", "citrus", "tomatoes", "nightshades", "garlic", "onions", "mushrooms", "avocado", "banana", "berries", "oats", "legumes", "seeds", "poultry", "red meat", "pork", "beef", "chicken"];
   // ---------- every vitamin & mineral ----------
   // Nutrients with exact amounts in our food data (% of Daily Value, see ING.mi):
   W.TRACKED = ["A", "C", "D", "B12", "Fe", "Ca", "K", "Mg"];
@@ -537,6 +538,6 @@
       ["inflam", "Less inflammation"], ["joints", "Joint support"], ["cholesterol", "Healthy cholesterol"], ["hormones", "Hormone balance"], ["pms", "Easier PMS"],
       ["menopause", "Menopause support"], ["recovery", "Workout recovery"], ["metabolism", "Healthy metabolism"]
     ],
-    lifestyle: [["quick", "Quick meals (about 25 min or less)"], ["plants", "Eat more plants"], ["hiprot", "Extra protein"]]
+    lifestyle: [["quick", "Quick meals (about 25 min or less)"], ["fastest", "Super fast (15 min or less)"], ["simple", "Few ingredients"], ["plants", "Eat more plants"], ["meatless", "More meat-free meals"], ["veggies", "More vegetables"], ["hiprot", "Extra protein"], ["fiber", "More fiber"], ["lowcarb", "Lower carb"], ["fish", "More fish & omega-3"], ["budget", "Budget-friendly"]]
   };
 })(globalThis);
