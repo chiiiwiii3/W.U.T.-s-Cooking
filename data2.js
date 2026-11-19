@@ -26,35 +26,35 @@
   add("butternut", "Butternut squash", "g", P, [45, 1, 11.7, 0.1, 2], [532, 21, 0, 0, 0.7, 48, 352, 34], {}, "A butternut squash with a hard, matte skin, or pre-cut cubes to save time.");
   add("beets", "Beets", "g", P, [43, 1.6, 9.6, 0.2, 2.8], [2, 4.9, 0, 0, 0.8, 16, 325, 23], {}, "Firm beets with smooth skin. Pre-cooked, vacuum-packed plain beets save time.");
   add("celery", "Celery", "g", P, [14, 0.7, 3, 0.2, 1.6], [22, 3.1, 0, 0, 0.2, 40, 260, 11], {}, "Crisp celery stalks.");
-  add("tomatoescanned", "Canned diced tomatoes (no salt added)", "g", P, [21, 1, 4.6, 0.2, 1.9], [10, 9, 0, 0, 1, 30, 230, 11], {}, "Canned diced tomatoes with no salt added. A standard 400 g (14 oz) can is about 3 portions of sauce.");
+  add("tomatoescanned", "Canned diced tomatoes (no salt added)", "g", P, [16, 0.8, 3.5, 0.3, 1.9], [22, 12.6, 0, 0, 0.57, 33, 191, 10], {}, "Canned diced tomatoes with no salt added. A standard 400 g (14 oz) can is about 3 portions of sauce.");
   add("apple", "Apples", "ea", P, [95, 0.5, 25, 0.3, 4.4], [5, 8.4, 0, 0, 0.2, 11, 195, 9], { ea: ["medium apple", "medium apples"] }, "Crisp apples such as Honeycrisp, Gala or Granny Smith.");
   add("orange", "Oranges", "ea", P, [62, 1.2, 15.4, 0.2, 3.1], [14, 69.7, 0, 0, 0.1, 52, 237, 13], { ea: ["orange", "oranges"] }, "Heavy, firm navel oranges.");
   add("kiwi", "Kiwi", "ea", P, [42, 0.8, 10, 0.4, 2.1], [4, 64, 0, 0, 0.2, 24, 215, 11], { ea: ["kiwi", "kiwis"] }, "Kiwis that give slightly when pressed.");
   add("raspberries", "Raspberries", "g", P, [52, 1.2, 12, 0.7, 6.5], [2, 26.2, 0, 0, 0.7, 25, 151, 22], {}, "Fresh or frozen raspberries. Frozen is cheaper and great for smoothies and chia jars.");
   add("mango", "Mango", "g", P, [60, 0.8, 15, 0.4, 1.6], [54, 36.4, 0, 0, 0.16, 11, 168, 10], {}, "Ripe mango that smells sweet at the stem, or frozen mango chunks. One mango gives about 200 g of flesh.");
-  add("bokchoy", "Bok choy", "g", P, [13, 1.5, 2.2, 0.2, 1], [223, 45, 0, 0, 0.8, 105, 252, 19], {}, "Baby or regular bok choy with crisp white stems and deep green leaves.");
+  add("bokchoy", "Bok choy", "g", P, [17, 1, 3.5, 0.2, 1.3], [223, 30.3, 0, 0, 0.44, 62, 228, 14], {}, "Baby or regular bok choy with crisp white stems and deep green leaves.");
   add("scallions", "Scallions (green onions)", "g", P, [32, 1.8, 7.3, 0.2, 2.6], [50, 18.8, 0, 0, 1.48, 72, 276, 20], {}, "A bunch of scallions with bright green tops.");
 
   // ---------- meat & seafood ----------
-  add("chickenthigh", "Chicken thighs (boneless, skinless)", "g", M, [121, 19.7, 0, 4.1, 0], [0, 0, 0.1, 0.4, 0.9, 8, 230, 21], { t: "meat" }, "Boneless, skinless chicken thighs (about 110–150 g each). Raw weight.");
+  add("chickenthigh", "Chicken thighs (boneless, skinless)", "g", M, [149, 18.6, 0, 7.9, 0], [0, 0, 0.1, 0.4, 0.6, 6, 272, 22], { t: "meat" }, "Boneless, skinless chicken thighs (about 110–150 g each). Raw weight.");
   add("groundbeef", "Lean ground beef (93% lean)", "g", M, [152, 21, 0, 7, 0], [0, 0, 0.1, 2.5, 2.3, 10, 320, 20], { t: "meat", red: true }, "93% lean ground beef. Raw weight. Use within 2 days or freeze.");
   add("tilapia", "Tilapia fillets (or other mild white fish)", "g", M, [96, 20, 0, 1.7, 0], [0, 0, 3.1, 1.58, 0.6, 10, 302, 27], { t: "fish", a: ["fish"] }, "Skinless tilapia fillets, fresh or frozen. Catfish or haddock also work.");
   add("sardines", "Canned sardines (in water or olive oil)", "g", M, [208, 24.6, 0, 11.5, 0], [32, 0, 4.8, 8.9, 2.9, 382, 397, 39], { t: "fish", a: ["fish"], o3: true, ai: true, hiNa: 0.8 }, "Canned boneless sardines in water or olive oil. A standard tin is about 90–120 g drained.");
 
   // ---------- dairy, eggs & soy ----------
   add("milk", "Milk (2%)", "ml", D, [50, 3.3, 4.8, 2, 0], [47, 0, 1.2, 0.45, 0, 120, 150, 11], { t: "dairy", a: ["dairy"], np: true }, "2% milk, or any milk you like. 1 liter is about 4 cups.");
-  add("cottagecheese", "Cottage cheese (2%)", "g", D, [81, 10.4, 4.8, 2.3, 0], [11, 0, 0, 0.45, 0.1, 111, 150, 8], { t: "dairy", a: ["dairy"], np: true, hiNa: 0.5 }, "Low-fat (2%) cottage cheese. Look for brands with the shortest ingredient list.");
-  add("mozzarella", "Part-skim mozzarella", "g", D, [254, 24.3, 2.8, 15.9, 0], [150, 0, 0, 2.3, 0.2, 731, 84, 27], { t: "dairy", a: ["dairy"], np: true, hiNa: 0.5 }, "Part-skim mozzarella: a ball in water or low-moisture block, or shredded.");
-  add("parmesan", "Parmesan cheese", "g", D, [431, 38, 4.1, 29, 0], [207, 0, 0, 1.2, 0.8, 1184, 92, 44], { t: "dairy", a: ["dairy"], np: true, hiNa: 1 }, "A wedge of real Parmesan to grate. A little goes a long way.");
-  add("tempeh", "Tempeh", "g", D, [192, 20, 7.6, 11, 4], [0, 0, 0, 0, 2.7, 111, 412, 81], { a: ["soy"], np: true }, "Plain soy tempeh, found near the tofu. An 227 g (8 oz) block is about 2 portions.");
+  add("cottagecheese", "Cottage cheese (2%)", "g", D, [84, 11, 4.3, 2.3, 0], [69, 0, 0, 0.42, 0.13, 103, 120, 9], { t: "dairy", a: ["dairy"], np: true, hiNa: 0.5 }, "Low-fat (2%) cottage cheese. Look for brands with the shortest ingredient list.");
+  add("mozzarella", "Part-skim mozzarella", "g", D, [254, 24.3, 2.8, 15.9, 0], [127, 0, 0.3, 0.82, 0.22, 782, 84, 23], { t: "dairy", a: ["dairy"], np: true, hiNa: 0.5 }, "Part-skim mozzarella: a ball in water or low-moisture block, or shredded.");
+  add("parmesan", "Parmesan cheese", "g", D, [392, 35.8, 3.2, 25, 0], [207, 0, 0, 1.2, 0.8, 1184, 92, 44], { t: "dairy", a: ["dairy"], np: true, hiNa: 1 }, "A wedge of real Parmesan to grate. A little goes a long way.");
+  add("tempeh", "Tempeh", "g", D, [192, 20, 7.6, 11, 4], [0, 0, 0, 0, 2.7, 111, 412, 81], { a: ["soy"], np: true }, "Plain soy tempeh, found near the tofu. A 227 g (8 oz) block is about 2 portions.");
   add("edamame", "Shelled edamame (frozen)", "g", D, [121, 11.9, 8.9, 5.2, 5.2], [9, 6.1, 0, 0, 2.1, 60, 482, 64], { a: ["soy"], np: true }, "Frozen shelled edamame (soybeans). Cook from frozen.");
 
   // ---------- grains & beans ----------
   add("pasta", "Whole-wheat pasta (dry)", "g", G, [350, 14, 72, 2.5, 10], [0, 0, 0, 0, 3.6, 40, 405, 143], { a: ["gluten"], np: true, proc: true }, "Whole-wheat spaghetti, penne or rotini. Weight is dry. Use a gluten-free pasta if you avoid gluten.");
   add("ricenoodles", "Rice noodles (dry)", "g", G, [364, 3.4, 80, 0.6, 1.6], [0, 0, 0, 0, 0.3, 6, 30, 22], { np: true, proc: true }, "Flat or thin dry rice noodles (gluten-free). Check the label that they are only rice and water. Weight is dry.");
-  add("ricewhite", "White rice (dry)", "g", G, [365, 7.1, 80, 0.7, 1.3], [0, 0, 0, 0, 4.3, 28, 115, 25], { np: true }, "Jasmine or basmati rice. Weight is dry (it roughly triples when cooked).");
+  add("ricewhite", "White rice (dry)", "g", G, [365, 7.1, 80, 0.7, 1.3], [0, 0, 0, 0, 0.8, 28, 115, 25], { np: true }, "Jasmine or basmati rice. Weight is dry (it roughly triples when cooked).");
   add("whitebeans", "Canned white beans (cannellini)", "g", G, [114, 7, 20, 0.5, 5.5], [0, 0, 0, 0, 2.6, 60, 270, 38], { np: true }, "Canned cannellini or great northern beans, low-sodium if you can. Drained weight shown: a 425 g can is about 250 g drained.");
-  add("kidneybeans", "Canned kidney beans", "g", G, [90, 6, 16, 0.4, 5.5], [0, 0, 0, 0, 2, 30, 230, 28], { np: true }, "Canned red kidney beans, low-sodium if you can. Drained weight shown: a 425 g can is about 250 g drained.");
+  add("kidneybeans", "Canned kidney beans", "g", G, [124, 8, 21.5, 1.1, 5.5], [0, 0.2, 0, 0, 1.5, 57, 277, 28], { np: true }, "Canned red kidney beans, low-sodium if you can. Drained weight shown: a 425 g can is about 250 g drained.");
   add("cornTortilla", "Corn tortillas", "ea", G, [52, 1.4, 10.7, 0.7, 1.5], [0, 0, 0, 0, 0.4, 45, 40, 19], { ea: ["corn tortilla", "corn tortillas"], np: true, proc: true, pack: { size: 30, label: "pack" } }, "Soft corn tortillas made with just corn, lime and water.");
 
   // ---------- nuts, seeds & pantry ----------
@@ -67,24 +67,24 @@
 
   // ---------- extra food-source tags for the vitamin & mineral boosts ----------
   const SRC = {
-    B1: ["pasta", "sunflowerseeds", "peas", "edamame", "whitebeans", "kidneybeans", "ricewhite", "flax", "pumpkinseeds", "cashews"],
-    B2: ["milk", "cottagecheese", "parmesan", "almonds", "tempeh", "sardines", "mozzarella"],
-    B3: ["chickenthigh", "tilapia", "sardines", "groundbeef", "sunflowerseeds", "almonds", "tempeh", "peas"],
+    B1: ["pasta", "sunflowerseeds", "peas", "edamame", "kidneybeans", "flax", "pumpkinseeds", "cashews"],
+    B2: ["milk", "cottagecheese", "parmesan", "almonds", "tempeh", "sardines", "mozzarella", "sunflowerseeds"],
+    B3: ["chickenthigh", "tilapia", "sardines", "groundbeef", "sunflowerseeds", "almonds", "tempeh", "peas", "pasta", "pumpkinseeds"],
     B5: ["sunflowerseeds", "chickenthigh", "groundbeef"],
-    B6: ["potato", "chickenthigh", "groundbeef", "kidneybeans", "sunflowerseeds", "whitebeans"],
+    B6: ["potato", "chickenthigh", "groundbeef", "kidneybeans", "sunflowerseeds", "flax"],
     B7: ["almonds", "sardines"],
-    B9: ["asparagus", "brusselssprouts", "peas", "edamame", "beets", "whitebeans", "kidneybeans", "cabbage", "bokchoy", "sunflowerseeds", "ricewhite", "flax", "orange", "mango", "pumpkinseeds"],
-    E: ["almonds", "sunflowerseeds", "butternut", "asparagus", "kiwi", "pumpkinseeds"],
-    VK: ["brusselssprouts", "asparagus", "cabbage", "greenbeans", "bokchoy", "scallions", "peas", "kiwi", "celery", "raspberries"],
-    Choline: ["edamame", "brusselssprouts", "chickenthigh", "groundbeef", "sardines", "peas", "almonds"],
+    B9: ["asparagus", "brusselssprouts", "peas", "edamame", "beets", "whitebeans", "kidneybeans", "cabbage", "bokchoy", "sunflowerseeds", "flax", "orange", "mango", "pumpkinseeds"],
+    E: ["almonds", "sunflowerseeds", "butternut", "asparagus", "pumpkinseeds"],
+    VK: ["brusselssprouts", "asparagus", "cabbage", "greenbeans", "bokchoy", "scallions", "peas", "kiwi", "celery", "cashews"],
+    Choline: ["edamame", "brusselssprouts", "chickenthigh", "groundbeef", "sardines", "peas"],
     Cr: ["potato", "groundbeef", "pasta"],
-    Cu: ["cashews", "sunflowerseeds", "pumpkinseeds", "almonds", "potato", "kidneybeans", "whitebeans", "flax", "edamame"],
+    Cu: ["cashews", "sunflowerseeds", "pumpkinseeds", "almonds", "potato", "kidneybeans", "whitebeans", "flax", "edamame", "tempeh", "pasta"],
     I: ["milk", "cottagecheese", "sardines"],
-    Mn: ["pasta", "pumpkinseeds", "sunflowerseeds", "almonds", "flax", "cashews", "raspberries", "edamame", "kidneybeans", "whitebeans"],
+    Mn: ["pasta", "pumpkinseeds", "sunflowerseeds", "almonds", "flax", "cashews", "raspberries", "edamame", "kidneybeans", "whitebeans", "tempeh", "ricewhite"],
     Mo: ["whitebeans", "kidneybeans", "edamame", "peas"],
-    P: ["milk", "cottagecheese", "mozzarella", "parmesan", "tilapia", "sardines", "chickenthigh", "groundbeef", "pumpkinseeds", "sunflowerseeds", "almonds", "cashews", "flax", "tempeh", "edamame", "whitebeans", "kidneybeans", "pasta"],
-    Se: ["tilapia", "sardines", "chickenthigh", "groundbeef", "cottagecheese", "pasta", "sunflowerseeds"],
-    Zn: ["groundbeef", "pumpkinseeds", "cashews", "sunflowerseeds", "almonds", "flax", "kidneybeans", "edamame", "tempeh", "parmesan", "chickenthigh"]
+    P: ["cottagecheese", "mozzarella", "parmesan", "tilapia", "sardines", "chickenthigh", "groundbeef", "pumpkinseeds", "sunflowerseeds", "almonds", "cashews", "flax", "tempeh", "edamame", "kidneybeans", "pasta"],
+    Se: ["tilapia", "sardines", "chickenthigh", "groundbeef", "cottagecheese", "pasta", "sunflowerseeds", "ricewhite", "cashews", "flax", "mozzarella", "parmesan"],
+    Zn: ["groundbeef", "pumpkinseeds", "cashews", "sunflowerseeds", "almonds", "flax", "kidneybeans", "edamame", "tempeh", "parmesan", "chickenthigh", "pasta"]
   };
   for (const k in SRC) for (const id of SRC[k]) { if (!ING[id]) throw new Error("bad source id " + id); (ING[id].gs = ING[id].gs || []).push(k); W.SOURCES[k].push(id); }
 
