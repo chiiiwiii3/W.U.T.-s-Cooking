@@ -19,43 +19,43 @@
 
   const ING = {
     // ---------- Produce ----------
-    avocado: { n: "Avocados", u: "ea", ea: ["avocado", "avocados"], cat: "Produce", per: [240, 3, 13, 22, 10], mi: { C: 13, K: 15, Mg: 14, Fe: 4, Ca: 2 }, buy: "Ripe-but-firm Hass avocados. If they're hard, buy a few days ahead and let them ripen on the counter." },
+    avocado: { n: "Avocados", u: "ea", ea: ["avocado", "avocados"], cat: "Produce", per: [227, 2.7, 11.7, 21, 9.3], mi: { C: 13, K: 15, Mg: 9, Fe: 5, Ca: 1 }, buy: "Ripe-but-firm Hass avocados. If they're hard, buy a few days ahead and let them ripen on the counter." },
     banana: { n: "Bananas", u: "ea", ea: ["banana", "bananas"], cat: "Produce", per: [105, 1.3, 27, 0.4, 3], mi: { K: 9, Mg: 8, C: 11 }, buy: "Bananas that are yellow with a few brown freckles." },
     lemon: { n: "Lemons", u: "ea", ea: ["lemon", "lemons"], cat: "Produce", per: [17, 0.6, 5, 0.2, 1.6], mi: { C: 34, K: 2 }, buy: "Fresh lemons (limes work too)." },
     blueberries: { n: "Blueberries", u: "g", cat: "Produce", per: [57, 0.7, 14, 0.3, 2.4], mi: { C: 11, K: 2 }, ai: true, buy: "Fresh or frozen unsweetened blueberries. Frozen is cheaper and keeps for months." },
     strawberries: { n: "Strawberries", u: "g", cat: "Produce", per: [32, 0.7, 8, 0.3, 2], mi: { C: 65, K: 3, Mg: 3 }, buy: "Fresh or frozen unsweetened strawberries." },
     spinach: { n: "Baby spinach", u: "g", cat: "Produce", per: [23, 2.9, 3.6, 0.4, 2.2], mi: { A: 52, C: 31, Fe: 15, Ca: 8, K: 12, Mg: 19 }, ai: true, buy: "Baby spinach. The pre-washed bag or tub is easiest (a typical bag is 142–170 g)." },
-    kale: { n: "Kale", u: "g", cat: "Produce", per: [35, 2.9, 4.4, 1.5, 4.1], mi: { A: 50, C: 103, Ca: 12, K: 7, Mg: 8, Fe: 8 }, ai: true, buy: "Curly or lacinato (Tuscan) kale. Strip the tough stems before weighing." },
-    greens: { n: "Salad greens or lettuce", u: "g", cat: "Produce", per: [17, 1.4, 3.3, 0.2, 1.8], mi: { A: 41, C: 20, K: 5, Ca: 3, Fe: 6 }, buy: "Romaine hearts, butter lettuce or a mixed-greens bag. Big whole leaves work best for wraps." },
+    kale: { n: "Kale", u: "g", cat: "Produce", per: [35, 2.9, 4.4, 1.5, 4.1], mi: { A: 27, C: 103, Ca: 20, K: 7, Mg: 8, Fe: 9 }, ai: true, buy: "Curly or lacinato (Tuscan) kale. Strip the tough stems before weighing." },
+    greens: { n: "Salad greens or lettuce", u: "g", cat: "Produce", per: [17, 1.4, 3.3, 0.2, 1.8], mi: { A: 48, C: 5, K: 5, Ca: 3, Fe: 5 }, buy: "Romaine hearts, butter lettuce or a mixed-greens bag. Big whole leaves work best for wraps." },
     broccoli: { n: "Broccoli", u: "g", cat: "Produce", per: [34, 2.8, 7, 0.4, 2.6], mi: { C: 99, A: 3, Ca: 4, Fe: 4, K: 7, Mg: 5 }, ai: true, buy: "Fresh crowns or a bag of frozen florets (frozen works great for roasting and stir-fries)." },
-    bellpepper: { n: "Bell peppers", u: "g", cat: "Produce", per: [31, 1, 6, 0.3, 2.1], mi: { C: 140, A: 17, K: 4, Mg: 3 }, buy: "Any color; red are the sweetest. One large pepper is about 150–200 g. For stuffed peppers, pick large flat-bottomed ones." },
+    bellpepper: { n: "Bell peppers", u: "g", cat: "Produce", per: [26, 1, 6, 0.3, 2.1], mi: { C: 140, A: 17, K: 4, Mg: 3 }, buy: "Any color; red are the sweetest. One large pepper is about 150–200 g. For stuffed peppers, pick large flat-bottomed ones." },
     tomato: { n: "Tomatoes", u: "g", cat: "Produce", per: [18, 0.9, 3.9, 0.2, 1.2], mi: { C: 16, A: 5, K: 5 }, buy: "Ripe Roma/plum tomatoes or cherry tomatoes. One medium tomato is about 120 g." },
     cucumber: { n: "Cucumbers", u: "g", cat: "Produce", per: [15, 0.7, 3.6, 0.1, 0.5], mi: { K: 3, C: 4, Mg: 3 }, buy: "English (seedless) or Persian cucumbers. One English cucumber is about 300 g." },
     carrot: { n: "Carrots", u: "g", cat: "Produce", per: [41, 0.9, 10, 0.2, 2.8], mi: { A: 93, K: 7, C: 7, Mg: 3 }, buy: "Whole carrots (not baby-cut). One medium carrot is about 60 g." },
     zucchini: { n: "Zucchini", u: "g", cat: "Produce", per: [17, 1.2, 3.1, 0.3, 1], mi: { C: 20, K: 6, Mg: 4, A: 1 }, buy: "Medium, firm zucchini with shiny skin. One medium is about 200 g." },
-    cauliflower: { n: "Cauliflower", u: "g", cat: "Produce", per: [25, 1.9, 5, 0.3, 2], mi: { C: 53, K: 6, Mg: 4 }, buy: "One head of cauliflower (about 600–800 g), or a bag of pre-riced cauliflower." },
+    cauliflower: { n: "Cauliflower", u: "g", cat: "Produce", per: [23, 1.6, 4.7, 0.2, 2], mi: { C: 75, K: 6, Mg: 3, Ca: 2 }, buy: "One head of cauliflower (about 600–800 g), or a bag of pre-riced cauliflower." },
     mushrooms: { n: "Mushrooms", u: "g", cat: "Produce", per: [22, 3.1, 3.3, 0.3, 1], mi: { K: 7, Mg: 2, Fe: 3 }, buy: "White or cremini (baby bella) mushrooms." },
     onion: { n: "Onions", u: "g", cat: "Produce", per: [40, 1.1, 9, 0.1, 1.7], mi: { C: 8, K: 3 }, buy: "Yellow onions. One medium onion is about 150 g." },
     garlic: { n: "Garlic", u: "ea", ea: ["garlic clove", "garlic cloves"], cat: "Produce", per: [4, 0.2, 1, 0, 0.1], mi: {}, pack: { size: 10, label: "head" }, buy: "Fresh garlic. One head holds about 10 cloves." },
-    ginger: { n: "Fresh ginger", u: "g", cat: "Produce", per: [80, 1.8, 18, 0.8, 2], mi: { K: 9, Mg: 10 }, ai: true, buy: "Fresh ginger root. A thumb-sized piece is about 25 g." },
+    ginger: { n: "Fresh ginger", u: "g", cat: "Produce", per: [80, 1.8, 18, 0.8, 2], mi: { C: 6, K: 9, Mg: 10 }, ai: true, buy: "Fresh ginger root. A thumb-sized piece is about 25 g." },
     sweetpotato: { n: "Sweet potatoes", u: "g", cat: "Produce", per: [86, 1.6, 20, 0.1, 3], mi: { A: 79, C: 3, K: 7, Mg: 6, Ca: 3 }, buy: "Orange-fleshed sweet potatoes, firm with no soft spots. One medium is about 200 g." },
 
     // ---------- Meat & seafood ----------
     chickenbreast: { n: "Chicken breast", u: "g", cat: "Meat & Seafood", per: [120, 22.5, 0, 2.6, 0], mi: { B12: 13, K: 8, Mg: 7, Fe: 2 }, t: "meat", buy: "Boneless, skinless chicken breasts (about 170–225 g each). Raw weight." },
     turkey: { n: "Lean ground turkey", u: "g", cat: "Meat & Seafood", per: [150, 19, 0, 8, 0], mi: { B12: 50, K: 5, Mg: 5, Fe: 6 }, t: "meat", buy: "Lean ground turkey (93% lean). Fresh or frozen; raw weight." },
-    beef: { n: "Lean beef (sirloin or flank)", u: "g", cat: "Meat & Seafood", per: [145, 22, 0, 6, 0], mi: { B12: 88, Fe: 13, K: 7, Mg: 6 }, t: "meat", red: true, buy: "Sirloin or flank steak trimmed lean, or pre-sliced stir-fry beef. Raw weight." },
-    salmon: { n: "Salmon fillets", u: "g", cat: "Meat & Seafood", per: [208, 20, 0, 13, 0], mi: { D: 55, B12: 130, K: 8, Mg: 6 }, t: "fish", a: ["fish"], o3: true, ai: true, buy: "Salmon fillets, wild-caught or farmed, skin-on or skinless. Fresh or frozen both work. One fillet is about 150–170 g." },
+    beef: { n: "Lean beef (sirloin or flank)", u: "g", cat: "Meat & Seafood", per: [131, 22, 0, 4, 0], mi: { B12: 46, Fe: 9, K: 7, Mg: 5 }, t: "meat", red: true, buy: "Sirloin or flank steak trimmed lean, or pre-sliced stir-fry beef. Raw weight." },
+    salmon: { n: "Salmon fillets", u: "g", cat: "Meat & Seafood", per: [208, 20, 0, 13, 0], mi: { D: 55, B12: 135, A: 6, K: 8, Mg: 6 }, t: "fish", a: ["fish"], o3: true, ai: true, buy: "Salmon fillets, wild-caught or farmed, skin-on or skinless. Fresh or frozen both work. One fillet is about 150–170 g." },
     cod: { n: "Cod fillets (or other mild white fish)", u: "g", cat: "Meat & Seafood", per: [82, 18, 0, 0.7, 0], mi: { B12: 38, K: 9, Mg: 8, D: 5 }, t: "fish", a: ["fish"], buy: "Skinless cod fillets, or haddock/pollock. Fresh or frozen." },
-    tuna: { n: "Canned tuna in water", u: "g", cat: "Meat & Seafood", per: [116, 26, 0, 1, 0], mi: { D: 10, B12: 100, K: 5, Mg: 7, Fe: 8 }, t: "fish", a: ["fish"], buy: "Canned light/skipjack tuna in water. A 142 g (5 oz) can holds about 110 g drained." },
+    tuna: { n: "Canned tuna in water", u: "g", cat: "Meat & Seafood", per: [90, 19, 0.1, 0.9, 0], mi: { D: 6, B12: 107, Fe: 9, Ca: 1, K: 4, Mg: 5 }, t: "fish", a: ["fish"], buy: "Canned light/skipjack tuna in water. A 142 g (5 oz) can holds about 110 g drained." },
     shrimp: { n: "Raw shrimp (peeled & deveined)", u: "g", cat: "Meat & Seafood", per: [85, 20, 0.2, 0.5, 0], mi: { B12: 46, Ca: 4, K: 4, Mg: 9, Fe: 3 }, t: "shellfish", a: ["shellfish"], buy: "Large raw shrimp, peeled and deveined. Frozen is fine; thaw overnight in the fridge." },
 
     // ---------- Dairy, eggs & tofu ----------
     eggs: { n: "Large eggs", u: "ea", ea: ["large egg", "large eggs"], cat: "Dairy, Eggs & Tofu", per: [72, 6.3, 0.4, 4.8, 0], mi: { A: 9, D: 6, B12: 20, Fe: 5, Ca: 2, K: 1 }, t: "egg", a: ["eggs"], pack: { size: 12, label: "dozen" }, buy: "Large eggs. Pasture-raised or omega-3 enriched if you like." },
     greekyogurt: { n: "Plain Greek yogurt", u: "g", cat: "Dairy, Eggs & Tofu", per: [73, 10, 4, 2, 0], mi: { Ca: 9, B12: 25, K: 3, Mg: 3 }, t: "dairy", a: ["dairy"], np: true, buy: "Plain, unsweetened Greek yogurt (2% or full-fat tastes best). A big tub is usually 750 g–1 kg." },
-    feta: { n: "Feta cheese", u: "g", cat: "Dairy, Eggs & Tofu", per: [264, 14, 4, 21, 0], mi: { Ca: 38, B12: 60, A: 14, K: 2 }, t: "dairy", a: ["dairy"], np: true, buy: "Block feta in brine tastes better than pre-crumbled. A standard block is about 200 g." },
+    feta: { n: "Feta cheese", u: "g", cat: "Dairy, Eggs & Tofu", per: [273, 19.7, 5.6, 19.1, 0], mi: { Ca: 29, B12: 60, A: 14, K: 2, Mg: 4 }, t: "dairy", a: ["dairy"], np: true, buy: "Block feta in brine tastes better than pre-crumbled. A standard block is about 200 g." },
     tofu: { n: "Extra-firm tofu", u: "g", cat: "Dairy, Eggs & Tofu", per: [144, 17, 3, 9, 2], mi: { Ca: 27, Fe: 15, Mg: 14, K: 5 }, a: ["soy"], np: true, buy: "Extra-firm or firm plain tofu in a water-packed block (not silken). One block is usually 400–450 g (14–16 oz)." },
-    plantmilk: { n: "Unsweetened plant milk", u: "ml", cat: "Dairy, Eggs & Tofu", per: [20, 0.8, 2, 1, 0.3], mi: { Ca: 14, D: 12 }, proc: true, buy: "Unsweetened plant milk that fits your allergies: oat, coconut-blend or pea-protein milk. (Almond milk contains tree nuts; soy milk contains soy.)" },
-    coconutmilk: { n: "Canned full-fat coconut milk", u: "ml", cat: "Dairy, Eggs & Tofu", per: [197, 2, 3, 21, 0], mi: { Fe: 9, Mg: 9, K: 5 }, buy: "Canned full-fat coconut milk (shake the can well). A standard can is 400 ml." },
+    plantmilk: { n: "Unsweetened plant milk", u: "ml", cat: "Dairy, Eggs & Tofu", per: [15, 0.6, 0.3, 1.2, 0], mi: { Ca: 13, D: 5, A: 5, B12: 14, Fe: 2, K: 1, Mg: 2 }, proc: true, buy: "Unsweetened plant milk that fits your allergies: oat, coconut-blend or pea-protein milk. (Almond milk contains tree nuts; soy milk contains soy.)" },
+    coconutmilk: { n: "Canned full-fat coconut milk", u: "ml", cat: "Dairy, Eggs & Tofu", per: [197, 2, 3, 21, 0], mi: { Fe: 18, Mg: 11, K: 5 }, buy: "Canned full-fat coconut milk (shake the can well). A standard can is 400 ml." },
 
     // ---------- Grains, beans & bread ----------
     oats: { n: "Rolled oats", u: "g", cat: "Grains, Beans & Bread", per: [379, 13, 68, 6.5, 10], mi: { Fe: 26, Mg: 33, K: 9, Ca: 4 }, a: ["gluten"], np: true, buy: "Old-fashioned (rolled) oats, not instant. Choose certified gluten-free oats if you avoid gluten. Weight is dry." },
@@ -75,8 +75,8 @@
     cinnamon: { n: "Ground cinnamon", u: "g", cat: "Oils, Nuts & Pantry", per: [247, 4, 81, 1.2, 53], mi: { Ca: 77, Fe: 44 }, buy: "Ground cinnamon." },
     chia: { n: "Chia seeds", u: "g", cat: "Oils, Nuts & Pantry", per: [486, 17, 42, 31, 34], mi: { Ca: 49, Fe: 43, Mg: 80, K: 9 }, o3: true, ai: true, buy: "Plain black or white chia seeds (baking or health-food aisle)." },
     walnuts: { n: "Walnuts", u: "g", cat: "Oils, Nuts & Pantry", per: [654, 15, 14, 65, 7], mi: { Mg: 38, K: 9, Fe: 16, Ca: 10 }, a: ["tree nuts"], o3: true, ai: true, buy: "Raw walnut halves or pieces." },
-    peanutbutter: { n: "Natural peanut butter", u: "g", cat: "Oils, Nuts & Pantry", per: [588, 25, 20, 50, 6], mi: { Mg: 37, K: 14, Fe: 11, Ca: 6 }, a: ["peanuts"], np: true, buy: "Natural peanut butter with just peanuts (and maybe salt)." },
-    tahini: { n: "Tahini (sesame paste)", u: "g", cat: "Oils, Nuts & Pantry", per: [595, 17, 21, 54, 9], mi: { Ca: 33, Fe: 40, Mg: 23, K: 9 }, a: ["sesame"], buy: "Pure sesame tahini, runny and well stirred. Stir the jar before measuring." }
+    peanutbutter: { n: "Natural peanut butter", u: "g", cat: "Oils, Nuts & Pantry", per: [598, 22.2, 22.3, 51.4, 6], mi: { Mg: 37, K: 14, Fe: 11, Ca: 6 }, a: ["peanuts"], np: true, buy: "Natural peanut butter with just peanuts (and maybe salt)." },
+    tahini: { n: "Tahini (sesame paste)", u: "g", cat: "Oils, Nuts & Pantry", per: [570, 17.8, 26.2, 48, 9.3], mi: { Ca: 32, Fe: 14, Mg: 23, K: 9 }, a: ["sesame"], buy: "Pure sesame tahini, runny and well stirred. Stir the jar before measuring." }
   };
 
   const STORE_DEFAULT_REHEAT = "Reheat until steaming hot all the way through (165 °F / 74 °C).";
@@ -454,22 +454,22 @@
   // For the rest we use well-known GOOD FOOD SOURCES (qualitative, not exact amounts).
   W.SOURCES = {
     B1: ["oats", "brownrice", "quinoa", "lentils", "blackbeans", "chickpeas", "bread", "peanutbutter", "tahini", "chia"],
-    B2: ["eggs", "greekyogurt", "feta", "mushrooms", "spinach", "salmon", "beef"],
-    B3: ["chickenbreast", "turkey", "tuna", "salmon", "beef", "peanutbutter", "mushrooms", "brownrice"],
+    B2: ["eggs", "greekyogurt", "feta", "mushrooms", "spinach", "salmon", "tahini"],
+    B3: ["chickenbreast", "turkey", "tuna", "salmon", "beef", "peanutbutter", "mushrooms", "brownrice", "tahini"],
     B5: ["avocado", "mushrooms", "eggs", "chickenbreast", "greekyogurt", "sweetpotato", "lentils", "salmon", "beef", "broccoli"],
-    B6: ["banana", "chickpeas", "chickenbreast", "turkey", "salmon", "tuna", "beef", "sweetpotato", "avocado"],
+    B6: ["banana", "chickpeas", "chickenbreast", "turkey", "salmon", "tuna", "beef", "sweetpotato", "avocado", "quinoa", "brownrice"],
     B7: ["eggs", "salmon", "avocado", "sweetpotato", "walnuts", "peanutbutter"],
-    B9: ["spinach", "kale", "greens", "lentils", "chickpeas", "blackbeans", "avocado", "broccoli", "quinoa", "strawberries", "bread", "tortilla"],
-    E: ["avocado", "spinach", "oliveoil", "peanutbutter", "sweetpotato", "bellpepper"],
+    B9: ["spinach", "kale", "greens", "lentils", "chickpeas", "blackbeans", "avocado", "broccoli", "quinoa", "bread", "tortilla"],
+    E: ["avocado", "spinach", "oliveoil", "peanutbutter", "bellpepper"],
     VK: ["kale", "spinach", "broccoli", "greens", "oliveoil", "avocado"],
-    Choline: ["eggs", "beef", "chickenbreast", "turkey", "salmon", "cod", "shrimp", "broccoli", "cauliflower", "quinoa", "tofu"],
+    Choline: ["eggs", "beef", "chickenbreast", "turkey", "salmon", "cod", "shrimp", "cauliflower", "quinoa", "tofu"],
     Cr: ["broccoli", "banana", "oats", "bread", "beef", "turkey"],
-    Cu: ["mushrooms", "lentils", "chickpeas", "quinoa", "oats", "walnuts", "tahini", "shrimp", "chia", "tofu"],
+    Cu: ["mushrooms", "lentils", "chickpeas", "quinoa", "oats", "walnuts", "tahini", "shrimp", "chia", "tofu", "brownrice"],
     I: ["cod", "shrimp", "tuna", "eggs", "greekyogurt", "feta", "salmon"],
-    Mn: ["oats", "brownrice", "quinoa", "chia", "spinach", "chickpeas", "lentils", "walnuts", "tofu", "blueberries"],
+    Mn: ["oats", "brownrice", "quinoa", "chia", "spinach", "chickpeas", "lentils", "walnuts", "tofu", "blueberries", "kale", "tahini"],
     Mo: ["lentils", "blackbeans", "chickpeas", "oats", "quinoa", "brownrice", "tofu"],
-    P: ["salmon", "tuna", "chickenbreast", "turkey", "beef", "eggs", "greekyogurt", "lentils", "oats", "quinoa", "chia", "tofu", "peanutbutter"],
-    Se: ["tuna", "shrimp", "cod", "salmon", "eggs", "chickenbreast", "turkey", "beef", "brownrice"],
+    P: ["salmon", "tuna", "chickenbreast", "turkey", "beef", "eggs", "greekyogurt", "lentils", "oats", "quinoa", "chia", "tofu", "peanutbutter", "tahini"],
+    Se: ["tuna", "shrimp", "cod", "salmon", "eggs", "chickenbreast", "turkey", "beef", "brownrice", "mushrooms", "oats"],
     Zn: ["beef", "lentils", "chickpeas", "blackbeans", "quinoa", "oats", "tofu", "tahini", "peanutbutter", "chia", "shrimp", "turkey", "eggs"]
   };
   for (const k in W.SOURCES) for (const id of W.SOURCES[k]) { if (!ING[id]) throw new Error("bad source id " + id); (ING[id].gs = ING[id].gs || []).push(k); }

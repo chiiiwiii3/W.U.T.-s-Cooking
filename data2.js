@@ -21,7 +21,7 @@
   add("asparagus", "Asparagus", "g", P, [20, 2.2, 3.9, 0.1, 2.1], [38, 5.6, 0, 0, 2.14, 24, 202, 14], {}, "Medium-thin asparagus with firm tips. Snap off the woody ends.");
   add("greenbeans", "Green beans", "g", P, [31, 1.8, 7, 0.2, 2.7], [35, 12.2, 0, 0, 1, 37, 211, 25], {}, "Fresh green beans that snap cleanly, or frozen plain green beans.");
   add("peas", "Green peas (frozen)", "g", P, [81, 5.4, 14.5, 0.4, 5.7], [38, 40, 0, 0, 1.47, 25, 244, 33], { np: true }, "A bag of plain frozen green peas. Cook from frozen.");
-  add("corn", "Sweet corn kernels (frozen)", "g", P, [86, 3.2, 19, 1.2, 2.7], [9, 6.8, 0, 0, 0.52, 2, 270, 37], { np: true }, "Plain frozen sweet corn, no sauce or butter.");
+  add("corn", "Sweet corn kernels (frozen)", "g", P, [98, 3.3, 23.5, 0.8, 2.8], [12, 7.2, 0, 0, 0.68, 4, 294, 32], { np: true }, "Plain frozen sweet corn, no sauce or butter.");
   add("eggplant", "Eggplant", "g", P, [25, 1, 6, 0.2, 3], [1, 2.2, 0, 0, 0.23, 9, 229, 14], {}, "A firm, glossy eggplant that feels heavy for its size.");
   add("butternut", "Butternut squash", "g", P, [45, 1, 11.7, 0.1, 2], [532, 21, 0, 0, 0.7, 48, 352, 34], {}, "A butternut squash with a hard, matte skin, or pre-cut cubes to save time.");
   add("beets", "Beets", "g", P, [43, 1.6, 9.6, 0.2, 2.8], [2, 4.9, 0, 0, 0.8, 16, 325, 23], {}, "Firm beets with smooth skin. Pre-cooked, vacuum-packed plain beets save time.");
@@ -76,7 +76,7 @@
     B9: ["asparagus", "brusselssprouts", "peas", "edamame", "beets", "whitebeans", "kidneybeans", "cabbage", "bokchoy", "sunflowerseeds", "flax", "orange", "mango", "pumpkinseeds"],
     E: ["almonds", "sunflowerseeds", "butternut", "asparagus", "pumpkinseeds"],
     VK: ["brusselssprouts", "asparagus", "cabbage", "greenbeans", "bokchoy", "scallions", "peas", "kiwi", "celery", "cashews"],
-    Choline: ["edamame", "brusselssprouts", "chickenthigh", "groundbeef", "sardines", "peas"],
+    Choline: ["edamame", "chickenthigh", "groundbeef", "sardines"],
     Cr: ["potato", "groundbeef", "pasta"],
     Cu: ["cashews", "sunflowerseeds", "pumpkinseeds", "almonds", "potato", "kidneybeans", "whitebeans", "flax", "edamame", "tempeh", "pasta"],
     I: ["milk", "cottagecheese", "sardines"],
