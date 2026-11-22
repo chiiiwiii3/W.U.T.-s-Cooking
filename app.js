@@ -293,6 +293,7 @@
     ps.forEach((t) => { const li = t.startsWith("- "); if (li && !inList) { out += "<ul>"; inList = true; } if (!li && inList) { out += "</ul>"; inList = false; } out += para(t); });
     return out + (inList ? "</ul>" : "");
   }).join("");
+  const reportBtn = (rid) => `<button type="button" class="linkish center" data-act="report" ${rid ? `data-rid="${esc(rid)}"` : ""}>⚠️ Report a problem</button>`;
   const legalLink = () => `<button type="button" class="linkish center" data-act="go" data-arg="legal">Terms, privacy &amp; safety</button>`;
   function legalGate() {
     return `<div class="page"><div class="hero hasmascot">${mascot()}<div class="eyebrow">Before we start</div><h1>Please read this</h1><p>It's short, and it matters for your safety.</p></div>
@@ -304,7 +305,7 @@
   }
   function legalScreen() {
     return `<div class="page"><button class="back" data-act="closeLegal">← Back</button><div class="hero"><div class="eyebrow">Last updated ${esc(W.LEGAL_UPDATED)}</div><h1 class="small">Terms, privacy &amp; safety</h1></div>
-      <div class="card legal">${legalBody()}</div></div>`;
+      <div class="card legal">${legalBody()}</div>${reportBtn("")}</div>`;
   }
   const safetyFoot = `<p class="fine">W.U.T.'s Cooking gives general food ideas, not medical advice. Nutrition numbers are estimates. Always check ingredient labels for allergens.</p>`;
 
@@ -435,6 +436,7 @@
       <div class="card"><h3>🛒 Ingredients</h3><ul class="list">${ings}</ul>${!r.user && r.pantry && r.pantry.length ? `<p class="fine"><b>Pantry:</b> ${esc(r.pantry.join(", "))}</p>` : ""}</div>
       <div class="card"><h3>👩‍🍳 How to cook</h3>${steps || "<p class='muted'>No steps added.</p>"}</div>
       <div class="card"><h3>📦 Storing</h3>${st}</div>
+      ${reportBtn(r.id)}
       ${r.user ? `<button class="btn ghost danger" data-act="delRecipe" data-rid="${esc(r.id)}">Delete this recipe</button>` : ""}</div>`;
   }
 
@@ -642,6 +644,9 @@
       const lines = ["Let's cook! 👨‍🍳", "Wheee! 🌀", "Nuts about meal prep! 🌰", "Eat your veggies! 🥦"];
       toast(lines[Math.floor(Math.random() * lines.length)]);
     },
+    report: (a, el) => openReport(el.dataset.rid || ""),
+    sendReport: () => sendReport(false),
+    copyReport: () => sendReport(true),
     install: () => installApp(),
     closeModal: () => closeModal()
   };
@@ -740,6 +745,37 @@
   const isInstalled = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
   window.addEventListener("appinstalled", () => { deferredPrompt = null; if (state.screen === "home") render(true); toast("Installed! 🎉"); });
+  // ---------- report a problem ----------
+  function openReport(rid) {
+    closeModal();
+    const r = rid ? W.recipeById(rid, state) : null;
+    const d = document.createElement("div");
+    d.className = "modal"; d.id = "modal";
+    d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Report a problem" data-rid="${esc(rid)}">
+      <h3>⚠️ Report a problem</h3>
+      ${r ? `<p class="muted">About: <b>${esc(r.name)}</b></p>` : `<p class="muted">Tell us what's wrong.</p>`}
+      <label class="field"><span>What kind of problem?</span><select id="rpType"><option>Allergen or ingredient problem</option><option>Wrong nutrition numbers</option><option>Unsafe or wrong cooking or storage instructions</option><option>Something else</option></select></label>
+      <label class="field"><span>Details</span><textarea id="rpText" rows="4" placeholder="What did you notice?"></textarea></label>
+      <label class="shopitem consent"><input type="checkbox" id="rpProfile"><span>Include my allergies and diet to help. They are shared only if I send this.</span></label>
+      <p class="fine">If someone is having an allergic reaction or feels very unwell, call your local emergency number first.</p>
+      ${W.SUPPORT_EMAIL ? "" : `<p class="fine">Support email isn't set up yet, so this will copy your report to paste into a message.</p>`}
+      <button class="btn" data-act="${W.SUPPORT_EMAIL ? "sendReport" : "copyReport"}">${W.SUPPORT_EMAIL ? "📧 Email report" : "📋 Copy report"}</button>
+      ${W.SUPPORT_EMAIL ? `<button class="btn ghost" data-act="copyReport">📋 Copy instead</button>` : ""}
+      <button class="btn ghost" data-act="closeModal">Cancel</button></div>`;
+    document.body.appendChild(d);
+  }
+  function sendReport(copyOnly) {
+    const sheet = document.querySelector("#modal .sheet"); if (!sheet) return;
+    const rid = sheet.dataset.rid, r = rid ? W.recipeById(rid, state) : null;
+    const type = document.getElementById("rpType").value, text = document.getElementById("rpText").value.trim();
+    const withP = document.getElementById("rpProfile").checked;
+    const lines = [`Report: ${type}`, r ? `Recipe: ${r.name} (${r.id})${r.user ? " [user recipe]" : ""}` : "Recipe: (none)", `Details: ${text || "(none)"}`, `App data version: ${W.LEGAL_VERSION}, ${new Date().toISOString().slice(0, 10)}`];
+    if (withP) lines.push(`Diet: ${dietLabel()}`, `Allergies: ${(W.effAllergies(state).join(", ")) || "none listed"}`);
+    const body = lines.join("\n");
+    if (!copyOnly && W.SUPPORT_EMAIL) { location.href = `mailto:${W.SUPPORT_EMAIL}?subject=${encodeURIComponent("W.U.T.'s Cooking problem report")}&body=${encodeURIComponent(body)}`; closeModal(); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(body).then(() => { toast("Report copied 📋"); closeModal(); }, () => toast("Couldn't copy. Select the text instead."));
+    else toast("Copy isn't available in this browser");
+  }
   function closeModal() { const m = document.getElementById("modal"); if (m) m.remove(); }
   function installApp() {
     if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; return; }

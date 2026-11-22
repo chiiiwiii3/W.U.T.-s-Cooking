@@ -5,6 +5,9 @@
   "use strict";
   const W = (root.WUT = root.WUT || {});
   W.LEGAL_VERSION = 1;
+  // OWNER: put your support address here (e.g. "safety@yourdomain.com"). While it is empty the Report form
+  // lets people copy their report instead of emailing it.
+  W.SUPPORT_EMAIL = "";
   W.LEGAL_UPDATED = "November 2026";
 
   // Short version shown on the first-run screen and in the footer
@@ -67,6 +70,10 @@
       "To the fullest extent permitted by law, the App and everything in it are provided \"as is\" and \"as available\", without warranties of any kind, express or implied, including accuracy, completeness, fitness for a particular purpose, safety or non-infringement. We don't promise that the App will be error-free, uninterrupted, or that it will meet your needs or health goals.",
       "To the fullest extent permitted by law, the creators, owners and contributors of the App will not be liable for any injury, illness, allergic reaction, loss, damage or expense (direct, indirect, incidental, special, consequential or otherwise) that comes from using the App or relying on it, including any meal, ingredient, nutrition figure, calculator result or suggestion.",
       "By using the App you accept that you use it at your own risk and that you are responsible for your own decisions. Some places don't allow certain limits or exclusions, so parts of this section may not apply to you, and nothing here limits rights that cannot be limited under the law where you live."
+    ]],
+    ["Reporting a problem", [
+      "If you think a recipe, ingredient, allergen note or nutrition figure is wrong or unsafe, please use the <b>Report a problem</b> button on the recipe page or in this notice. Reports go only where you choose to send them, and you decide whether to include your allergies and diet.",
+      "A report is not an emergency line. If someone is having an allergic reaction or feels seriously unwell, call your local emergency number first."
     ]],
     ["Changes", [
       "We may change the App and this notice. If the changes are important, we'll ask you to review and accept them again. Continuing to use the App after a change means you accept the updated notice."
