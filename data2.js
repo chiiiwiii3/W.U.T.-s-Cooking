@@ -74,7 +74,7 @@
     B6: ["potato", "chickenthigh", "groundbeef", "kidneybeans", "sunflowerseeds", "flax"],
     B7: ["almonds", "sardines"],
     B9: ["asparagus", "brusselssprouts", "peas", "edamame", "beets", "whitebeans", "kidneybeans", "cabbage", "bokchoy", "sunflowerseeds", "flax", "orange", "mango", "pumpkinseeds"],
-    E: ["almonds", "sunflowerseeds", "butternut", "asparagus", "pumpkinseeds"],
+    E: ["almonds", "sunflowerseeds", "butternut", "pumpkinseeds"],
     VK: ["brusselssprouts", "asparagus", "cabbage", "greenbeans", "bokchoy", "scallions", "peas", "kiwi", "celery", "cashews"],
     Choline: ["edamame", "chickenthigh", "groundbeef", "sardines"],
     Cr: ["potato", "groundbeef", "pasta"],

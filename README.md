@@ -29,7 +29,7 @@ A mobile-first meal-prep and recipe app (installable PWA). Tell it about yoursel
 - `app.js`: the interface
 - Everything is saved on the device in `localStorage`. There's no server and no account.
 
-Calories, macros and vitamins are computed from the ingredient list, so they are approximate. This is general food inspiration, not medical advice. The blood type diet is a popular idea without strong scientific support, so it is only used as a soft preference.
+Calories, macros and vitamins are computed from the ingredient list, so they are approximate. Ingredient values were checked against USDA FoodData Central (SR Legacy and Foundation records) in November 2026; a few entries (asparagus, shrimp, oils, tortilla, bread) rest on secondary pages or a judgment about which USDA record matches, and the vitamin/mineral "good source" tags use a 10% of Daily Value per 100 g cutoff. This is general food inspiration, not medical advice. The blood type diet is a popular idea without strong scientific support, so it is only used as a soft preference.
 
 ## GitHub Pages
 **Settings → Pages → Deploy from a branch → main → /(root)**. Installing to the Home Screen needs the https address GitHub Pages provides.

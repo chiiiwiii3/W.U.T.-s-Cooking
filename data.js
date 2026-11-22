@@ -61,18 +61,18 @@
     oats: { n: "Rolled oats", u: "g", cat: "Grains, Beans & Bread", per: [379, 13, 68, 6.5, 10], mi: { Fe: 26, Mg: 33, K: 9, Ca: 4 }, a: ["gluten"], np: true, buy: "Old-fashioned (rolled) oats, not instant. Choose certified gluten-free oats if you avoid gluten. Weight is dry." },
     quinoa: { n: "Quinoa (dry)", u: "g", cat: "Grains, Beans & Bread", per: [368, 14, 64, 6, 7], mi: { Fe: 26, Mg: 47, K: 12, Ca: 4 }, np: true, buy: "White, red or tri-color quinoa. Look for pre-rinsed, or rinse it yourself. Weight is dry, before cooking." },
     brownrice: { n: "Brown rice (dry)", u: "g", cat: "Grains, Beans & Bread", per: [370, 8, 77, 3, 3.5], mi: { Mg: 34, Fe: 8, K: 5 }, np: true, buy: "Long- or short-grain brown rice. Weight is dry, before cooking (it roughly triples when cooked)." },
-    lentils: { n: "Dry lentils", u: "g", cat: "Grains, Beans & Bread", per: [352, 25, 63, 1, 11], mi: { Fe: 42, Mg: 29, K: 14, Ca: 3 }, np: true, buy: "Dry green or brown lentils; they hold their shape when cooked. Weight is dry." },
-    chickpeas: { n: "Canned chickpeas", u: "g", cat: "Grains, Beans & Bread", per: [139, 7, 23, 2.8, 6], mi: { Fe: 16, Mg: 11, K: 4, Ca: 4 }, np: true, buy: "Canned chickpeas (garbanzo beans), low-sodium if you can. Drained weight shown: one 425 g (15 oz) can holds about 250 g drained." },
+    lentils: { n: "Dry lentils", u: "g", cat: "Grains, Beans & Bread", per: [352, 25, 63, 1, 11], mi: { Fe: 36, Mg: 11, K: 14, Ca: 3 }, np: true, buy: "Dry green or brown lentils; they hold their shape when cooked. Weight is dry." },
+    chickpeas: { n: "Canned chickpeas", u: "g", cat: "Grains, Beans & Bread", per: [139, 7, 23, 2.8, 6], mi: { Fe: 6, Mg: 6, K: 3, Ca: 3 }, np: true, buy: "Canned chickpeas (garbanzo beans), low-sodium if you can. Drained weight shown: one 425 g (15 oz) can holds about 250 g drained." },
     blackbeans: { n: "Canned black beans", u: "g", cat: "Grains, Beans & Bread", per: [91, 6, 16, 0.3, 6], mi: { Fe: 11, Mg: 10, K: 6, Ca: 3 }, np: true, buy: "Canned black beans, low-sodium if you can. Drained weight shown: one 425 g (15 oz) can holds about 250 g drained." },
-    bread: { n: "Whole-grain bread", u: "ea", ea: ["slice of whole-grain bread", "slices of whole-grain bread"], cat: "Grains, Beans & Bread", per: [100, 4, 18, 1.5, 3], mi: { Fe: 6, Mg: 6, K: 2 }, a: ["gluten"], np: true, proc: true, pack: { size: 16, label: "loaf" }, buy: "100% whole-grain or sprouted bread (a gluten-free loaf if you avoid gluten)." },
-    tortilla: { n: "Whole-wheat tortillas", u: "ea", ea: ["whole-wheat tortilla", "whole-wheat tortillas"], cat: "Grains, Beans & Bread", per: [140, 4, 24, 3.5, 3], mi: { Ca: 6, Fe: 8 }, a: ["gluten"], np: true, proc: true, pack: { size: 8, label: "pack" }, buy: "Burrito-size whole-wheat or whole-grain tortillas (gluten-free if needed)." },
+    bread: { n: "Whole-grain bread", u: "ea", ea: ["slice of whole-grain bread", "slices of whole-grain bread"], cat: "Grains, Beans & Bread", per: [81, 3.9, 13.8, 1.1, 1.9], mi: { Fe: 5, Mg: 6, Ca: 4, K: 2 }, a: ["gluten"], np: true, proc: true, pack: { size: 16, label: "loaf" }, buy: "100% whole-grain or sprouted bread, a regular sandwich slice of about 32 g (a gluten-free loaf if you avoid gluten)." },
+    tortilla: { n: "Whole-wheat tortillas", u: "ea", ea: ["whole-wheat tortilla", "whole-wheat tortillas"], cat: "Grains, Beans & Bread", per: [140, 4, 24, 3.5, 3], mi: { Ca: 8, Fe: 7, Mg: 9 }, a: ["gluten"], np: true, proc: true, pack: { size: 8, label: "pack" }, buy: "Burrito-size whole-wheat or whole-grain tortillas (gluten-free if needed)." },
 
     // ---------- Oils, nuts & pantry ----------
     oliveoil: { n: "Extra-virgin olive oil", u: "ml", cat: "Oils, Nuts & Pantry", per: [810, 0, 0, 92, 0], mi: {}, ai: true, buy: "Extra-virgin olive oil. One small bottle (500 ml) goes a long way." },
     sesameoil: { n: "Toasted sesame oil", u: "ml", cat: "Oils, Nuts & Pantry", per: [810, 0, 0, 92, 0], mi: {}, a: ["sesame"], buy: "Toasted sesame oil, a small bottle is plenty." },
-    soysauce: { n: "Low-sodium soy sauce", u: "ml", cat: "Oils, Nuts & Pantry", per: [63, 8, 5, 0.1, 0.8], mi: {}, a: ["soy", "gluten"], np: true, proc: true, buy: "Low-sodium soy sauce (use tamari if you avoid gluten)." },
-    maple: { n: "Pure maple syrup", u: "ml", cat: "Oils, Nuts & Pantry", per: [260, 0, 67, 0.1, 0], mi: {}, proc: true, buy: "Pure maple syrup, not pancake syrup." },
-    cinnamon: { n: "Ground cinnamon", u: "g", cat: "Oils, Nuts & Pantry", per: [247, 4, 81, 1.2, 53], mi: { Ca: 77, Fe: 44 }, buy: "Ground cinnamon." },
+    soysauce: { n: "Low-sodium soy sauce", u: "ml", cat: "Oils, Nuts & Pantry", per: [61, 9.8, 6, 0.3, 0.8], mi: { Fe: 8, K: 8, Mg: 18 }, a: ["soy", "gluten"], np: true, proc: true, buy: "Low-sodium soy sauce (use tamari if you avoid gluten)." },
+    maple: { n: "Pure maple syrup", u: "ml", cat: "Oils, Nuts & Pantry", per: [346, 0, 89, 0.1, 0], mi: { Ca: 10, K: 6, Mg: 7 }, proc: true, buy: "Pure maple syrup, not pancake syrup." },
+    cinnamon: { n: "Ground cinnamon", u: "g", cat: "Oils, Nuts & Pantry", per: [247, 4, 81, 1.2, 53], mi: { Ca: 77, Fe: 46, K: 9, Mg: 14 }, buy: "Ground cinnamon." },
     chia: { n: "Chia seeds", u: "g", cat: "Oils, Nuts & Pantry", per: [486, 17, 42, 31, 34], mi: { Ca: 49, Fe: 43, Mg: 80, K: 9 }, o3: true, ai: true, buy: "Plain black or white chia seeds (baking or health-food aisle)." },
     walnuts: { n: "Walnuts", u: "g", cat: "Oils, Nuts & Pantry", per: [654, 15, 14, 65, 7], mi: { Mg: 38, K: 9, Fe: 16, Ca: 10 }, a: ["tree nuts"], o3: true, ai: true, buy: "Raw walnut halves or pieces." },
     peanutbutter: { n: "Natural peanut butter", u: "g", cat: "Oils, Nuts & Pantry", per: [598, 22.2, 22.3, 51.4, 6], mi: { Mg: 37, K: 14, Fe: 11, Ca: 6 }, a: ["peanuts"], np: true, buy: "Natural peanut butter with just peanuts (and maybe salt)." },
@@ -453,11 +453,11 @@
   W.TRACKED = ["A", "C", "D", "B12", "Fe", "Ca", "K", "Mg"];
   // For the rest we use well-known GOOD FOOD SOURCES (qualitative, not exact amounts).
   W.SOURCES = {
-    B1: ["oats", "brownrice", "quinoa", "lentils", "blackbeans", "chickpeas", "bread", "peanutbutter", "tahini", "chia"],
+    B1: ["oats", "brownrice", "quinoa", "lentils", "blackbeans", "bread", "peanutbutter", "tahini", "chia"],
     B2: ["eggs", "greekyogurt", "feta", "mushrooms", "spinach", "salmon", "tahini"],
-    B3: ["chickenbreast", "turkey", "tuna", "salmon", "beef", "peanutbutter", "mushrooms", "brownrice", "tahini"],
+    B3: ["chickenbreast", "turkey", "tuna", "salmon", "beef", "peanutbutter", "mushrooms", "brownrice", "tahini", "chia"],
     B5: ["avocado", "mushrooms", "eggs", "chickenbreast", "greekyogurt", "sweetpotato", "lentils", "salmon", "beef", "broccoli"],
-    B6: ["banana", "chickpeas", "chickenbreast", "turkey", "salmon", "tuna", "beef", "sweetpotato", "avocado", "quinoa", "brownrice"],
+    B6: ["banana", "chickenbreast", "turkey", "salmon", "tuna", "beef", "sweetpotato", "avocado", "quinoa", "brownrice", "lentils"],
     B7: ["eggs", "salmon", "avocado", "sweetpotato", "walnuts", "peanutbutter"],
     B9: ["spinach", "kale", "greens", "lentils", "chickpeas", "blackbeans", "avocado", "broccoli", "quinoa", "bread", "tortilla"],
     E: ["avocado", "spinach", "oliveoil", "peanutbutter", "bellpepper"],
@@ -469,8 +469,8 @@
     Mn: ["oats", "brownrice", "quinoa", "chia", "spinach", "chickpeas", "lentils", "walnuts", "tofu", "blueberries", "kale", "tahini"],
     Mo: ["lentils", "blackbeans", "chickpeas", "oats", "quinoa", "brownrice", "tofu"],
     P: ["salmon", "tuna", "chickenbreast", "turkey", "beef", "eggs", "greekyogurt", "lentils", "oats", "quinoa", "chia", "tofu", "peanutbutter", "tahini"],
-    Se: ["tuna", "shrimp", "cod", "salmon", "eggs", "chickenbreast", "turkey", "beef", "brownrice", "mushrooms", "oats"],
-    Zn: ["beef", "lentils", "chickpeas", "blackbeans", "quinoa", "oats", "tofu", "tahini", "peanutbutter", "chia", "shrimp", "turkey", "eggs"]
+    Se: ["tuna", "shrimp", "cod", "salmon", "eggs", "chickenbreast", "turkey", "beef", "brownrice", "mushrooms", "oats", "chia"],
+    Zn: ["beef", "lentils", "quinoa", "oats", "tofu", "tahini", "peanutbutter", "chia", "shrimp", "turkey", "eggs"]
   };
   for (const k in W.SOURCES) for (const id of W.SOURCES[k]) { if (!ING[id]) throw new Error("bad source id " + id); (ING[id].gs = ING[id].gs || []).push(k); }
   // Salty ingredients (used by the "keep sodium low" boost); number = how salty
