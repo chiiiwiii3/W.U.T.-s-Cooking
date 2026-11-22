@@ -32,6 +32,7 @@
       "- Allergen detection depends on the words in the ingredient list. It can miss an ingredient that is named in an unexpected way, and it cannot read photos or files you upload.",
       "- Recipes you add yourself are checked only by the text you type. Recipes with only a photo or file are not checked at all.",
       "- If you have a severe allergy, intolerance, celiac disease or have ever had anaphylaxis, speak with an allergist or doctor, and follow your own emergency plan. Never rely on this App alone.",
+      "- The App asks you to confirm your allergy list once a week and shows an allergy reminder on your meals. Please keep your list up to date. The App only knows what you tell it.",
       "You are responsible for deciding whether a meal is safe for you and for anyone you cook for."
     ]],
     ["Health conditions, pregnancy, cycle and special groups", [

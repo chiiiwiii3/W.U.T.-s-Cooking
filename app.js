@@ -14,7 +14,7 @@
 
   function defaults() {
     return {
-      v: 3, screen: "onboarding", step: 1, view: null, back: "home", legalV: 0, legalCheck: false, legalAge: false,
+      v: 3, screen: "onboarding", step: 1, view: null, back: "home", legalV: 0, legalCheck: false, legalAge: false, allergyOk: 0,
       profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", repro: "", trimester: "", cycle: "", periodDate: "", cycleLen: "28", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
       goals: { body: "", micros: [], beauty: [], wellness: [], lifestyle: [] },
       targets: { cal: "", p: "", c: "", f: "" },
@@ -254,7 +254,7 @@
   const logKey = (slot, rid) => `${today()}|${slot}|${rid}`;
   const isAte = (slot, rid) => state.log.some((l) => l.key === logKey(slot, rid));
   const missingNotes = () => (state.plan && state.plan.missing.length
-    ? `<div class="note">We couldn't find a safe ${state.plan.missing.join(" / ").toLowerCase()} for your diet and allergies. Try a different diet in Profile, or add your own recipe.</div>` : "");
+    ? `<div class="note">We couldn't find a ${state.plan.missing.join(" / ").toLowerCase()} for your diet and allergies. Try a different diet in Profile, or add your own recipe.</div>` : "");
 
   function actionButtons(rid, slot, portion) {
     const ate = isAte(slot, rid), fav = state.favorites.includes(rid);
@@ -395,9 +395,24 @@
       ${cards || `<div class="empty card">${mascot("inline")}<p>${empty}</p></div>`}</div>`;
   }
 
+  const WEEK = 7 * 24 * 3600 * 1000;
+  const allergyList = () => (state.profile && W.effAllergies(state)) || [];
+  const needsAllergyCheck = () => allergyList().length > 0 && Date.now() - (state.allergyOk || 0) > WEEK;
+  const allergyBanner = () => allergyList().length
+    ? `<div class="note allergy-note" role="note">⚠️ <b>Allergies: ${esc(allergyList().join(", "))}.</b> We leave these out, but this isn't a guarantee. Check every label and ingredient before you eat.</div>` : "";
+  function allergyCheckScreen() {
+    const l = allergyList();
+    return `<div class="page"><div class="hero"><div class="eyebrow">Weekly check</div><h1>Are your allergies still right?</h1></div>
+      <div class="card"><p>You are avoiding:</p><div class="chips">${l.map((a) => `<span class="chip on">${esc(a)}</span>`).join("")}</div>
+      <p class="hint">Allergies can change, and we only know what you tell us. Please confirm this list is complete and correct. We ask once a week.</p>
+      <div class="note">⚠️ Even so, we can't guarantee any meal is free of an allergen. Read every label and check every recipe yourself.</div>
+      <button type="button" class="btn" data-act="allergyOk">✅ Yes, this is right</button>
+      <button type="button" class="btn ghost" data-act="allergyEdit">✏️ Edit my allergies</button></div></div>`;
+  }
   function addScreen() {
     return `<div class="page"><button class="back" data-act="go" data-arg="recipes">← Back</button>
       <div class="hero"><div class="eyebrow">Cookbook</div><h1>Add my recipe</h1></div>
+      ${allergyList().length ? `<div class="note">⚠️ Recipes you add are checked only by the words you type. Photos and files are <b>not</b> checked for your allergies at all. Check them yourself.</div>` : ""}
       <div class="card">${inp("Recipe name", "draft.name", { ph: "e.g. Grandma's chili" })}
       ${sel("Meal", "draft.meal", [["Breakfast", "Breakfast"], ["Lunch", "Lunch"], ["Dinner", "Dinner"], ["Snack", "Snack"]])}
       <label class="field"><span>Ingredients <small>one per line, with amounts</small></span><textarea rows="5" data-bind="draft.ingredients" placeholder="2 cups black beans&#10;1 onion, diced">${esc(state.draft.ingredients)}</textarea></label>
@@ -481,7 +496,9 @@
     const y = window.scrollY;
     let html;
     const gated = state.legalV < W.LEGAL_VERSION && state.screen !== "legal";
+    const allergyGate = !gated && state.screen !== "legal" && state.screen !== "onboarding" && needsAllergyCheck();
     if (gated) html = legalGate();
+    else if (allergyGate) html = allergyCheckScreen();
     else if (state.screen === "legal") html = legalScreen();
     else if (state.screen === "onboarding") html = onboarding();
     else {
@@ -490,7 +507,8 @@
       const map = { home, plan: planScreen, recipes, recipe: recipeView, add: addScreen, shop, profile, nutty: () => W.nutty.view(state.nutty) };
       html = (map[state.screen] || home)();
     }
-    $app.innerHTML = `<div class="shell">${top()}${html}${state.screen === "onboarding" || gated || state.screen === "legal" ? "" : nav()}</div>`;
+    const banner = ["home", "plan", "recipes", "recipe", "shop"].includes(state.screen) && !allergyGate && !gated ? allergyBanner() : "";
+    $app.innerHTML = `<div class="shell">${top()}${banner}${html}${state.screen === "onboarding" || gated || allergyGate || state.screen === "legal" ? "" : nav()}</div>`;
     window.scrollTo(0, keep ? y : 0);
   }
   function go(screen) { state.screen = screen; state.undo = null; save(); render(); }
@@ -498,6 +516,7 @@
   // ---------- actions ----------
   const toggleIn = (arr, v) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
   function finishOnboarding() {
+    state.allergyOk = Date.now();
     makePlan(state.planLen);
     state.screen = "home"; save(); render();
     toast("Your meal prep is ready! 🎉");
@@ -531,6 +550,8 @@
     go: (a) => { if (a === "legal" && state.screen !== "legal") state.legalPrev = state.screen; go(a); },
     legalFull: () => { if (state.screen !== "legal") state.legalPrev = state.screen; go("legal"); },
     closeLegal: () => go(state.legalPrev && state.legalPrev !== "legal" ? state.legalPrev : (state.legalV >= W.LEGAL_VERSION ? "home" : "onboarding")),
+    allergyOk: () => { state.allergyOk = Date.now(); save(); render(); },
+    allergyEdit: () => { state.allergyOk = Date.now(); state.screen = "profile"; save(); render(); toast("Update your allergies here"); },
     legalAge: (a, el) => { state.legalAge = el.checked; save(); render(true); },
     legalCheck: (a, el) => { state.legalCheck = el.checked; save(); render(true); },
     acceptLegal: () => {
@@ -543,7 +564,7 @@
     swap: (a, el) => {
       const day = Number(el.dataset.day), slot = el.dataset.slot;
       const r = W.swapMeal(state, day, slot);
-      if (!r.ok) { toast(r.reason === "none" ? "No other safe option for that meal" : "Couldn't find that meal"); return; }
+      if (!r.ok) { toast(r.reason === "none" ? "No other option fits for that meal" : "Couldn't find that meal"); return; }
       const nr = W.recipeById(r.after.rid, state);
       state.undo = { day, slot, before: r.before, name: nr.name };
       save(); render(true); toast("Swapped! 🔄");
