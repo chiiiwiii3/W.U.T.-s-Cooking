@@ -244,3 +244,11 @@ button.pill { cursor: pointer; font-family: inherit; }
 .ntable thead th { color: var(--gold); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
 .ntable tbody th { font-weight: 600; }
 input[type=search] { width: 100%; }
+
+/* ---- legal ---- */
+.legal h3 { font-size: 17px; margin: 18px 0 6px; color: var(--gold); }
+.legal h3:first-child { margin-top: 0; }
+.legal p, .legal li { font-size: 14.5px; color: var(--text); }
+.legal ul { padding-left: 20px; margin: 6px 0; }
+.legal li { margin: 6px 0; }
+.shopitem.consent, .shopitem.consent span { opacity: 1; text-decoration: none; color: var(--text); }

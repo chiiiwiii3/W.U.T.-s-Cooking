@@ -14,7 +14,7 @@
 
   function defaults() {
     return {
-      v: 3, screen: "onboarding", step: 1, view: null, back: "home",
+      v: 3, screen: "onboarding", step: 1, view: null, back: "home", legalV: 0, legalCheck: false, legalAge: false,
       profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", repro: "", trimester: "", cycle: "", periodDate: "", cycleLen: "28", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
       goals: { body: "", micros: [], beauty: [], wellness: [], lifestyle: [] },
       targets: { cal: "", p: "", c: "", f: "" },
@@ -36,6 +36,7 @@
         for (const k in s) d[k] = d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && s[k] && typeof s[k] === "object" ? Object.assign(d[k], s[k]) : s[k];
       }
     } catch (e) { /* first run or storage blocked */ }
+    if (d.legalV < W.LEGAL_VERSION) { d.legalAge = false; d.legalCheck = false; }
     return d;
   }
   let state = load();
@@ -165,6 +166,7 @@
         <div class="addrow"><input id="allergyInput" type="text" placeholder="Other allergy? Type it (e.g. kiwi)" autocomplete="off" aria-label="Add another allergy"><button type="button" class="btn small" data-act="addAllergy">Add</button></div>
         ${custom.length ? `<div class="chips">${custom.map((a) => `<button type="button" class="chip on removable" data-act="rmAllergy" data-arg="${esc(a)}" aria-label="Remove ${esc(a)}">${esc(a)} ✕</button>`).join("")}</div>` : ""}
         <p class="hint">Tap any that apply. Not listed? Type it below.</p>
+        <div class="note">⚠️ We can't guarantee any meal is allergen-free. Always read ingredient labels and check every recipe yourself. If your allergy is severe, talk to an allergist.</div>
         ${extraAllergy.length ? `<p class="hint">Also avoiding: ${esc(extraAllergy.join(", "))}.</p>` : ""}
       </div>`;
   }
@@ -175,6 +177,7 @@
         ${condDropdown()}
         ${p.conditions.length ? `<div class="chips">${p.conditions.map((c) => `<button type="button" class="chip on removable" data-act="rmCond" data-arg="${esc(c)}" aria-label="Remove ${esc(c)}">${esc(c)} ✕</button>`).join("")}</div>` : `<p class="hint">None selected. That's fine, or skip this.</p>`}
         <div class="addrow"><input id="condInput" type="text" placeholder="Condition not listed? Type it" autocomplete="off" aria-label="Add another health condition"><button type="button" class="btn small" data-act="addCondTxt">Add</button></div>
+        <div class="note soft">This isn't medical advice. Choosing a condition only nudges which general foods we suggest. Please follow your doctor's guidance.</div>
         ${f.serious ? `<div class="note">One or more of your conditions needs medical guidance. Please review any meal plan with your doctor or dietitian.</div>` : ""}
         ${f.ed ? `<div class="note">We'll keep calories at a maintenance level and won't push weight-loss goals. Please plan with your care team.</div>` : ""}
       </div>`;
@@ -283,6 +286,28 @@
     </article>`;
   }
 
+  // ---------- legal, safety & privacy ----------
+  const para = (t) => (t.startsWith("- ") ? `<li>${t.slice(2)}</li>` : `<p>${t}</p>`);
+  const legalBody = () => W.LEGAL_SECTIONS.map(([h, ps]) => {
+    let out = `<h3>${esc(h)}</h3>`, inList = false;
+    ps.forEach((t) => { const li = t.startsWith("- "); if (li && !inList) { out += "<ul>"; inList = true; } if (!li && inList) { out += "</ul>"; inList = false; } out += para(t); });
+    return out + (inList ? "</ul>" : "");
+  }).join("");
+  const legalLink = () => `<button type="button" class="linkish center" data-act="go" data-arg="legal">Terms, privacy &amp; safety</button>`;
+  function legalGate() {
+    return `<div class="page"><div class="hero hasmascot">${mascot()}<div class="eyebrow">Before we start</div><h1>Please read this</h1><p>It's short, and it matters for your safety.</p></div>
+      <div class="card legal"><ul>${W.LEGAL_SHORT.map((t) => `<li>${t}</li>`).join("")}</ul>
+        <p class="fine"><button type="button" class="linkish" data-act="legalFull">Read the full Terms, Privacy &amp; Safety notice</button></p></div>
+      <label class="shopitem consent"><input type="checkbox" data-act="legalAge" ${state.legalAge ? "checked" : ""}><span>I am 18 or older, or I'm using this with a parent, guardian or doctor.</span></label>
+      <label class="shopitem consent"><input type="checkbox" data-act="legalCheck" ${state.legalCheck ? "checked" : ""}><span>I have read and agree to the Terms, Privacy &amp; Safety notice. I understand this is not medical advice and I will check allergens myself.</span></label>
+      <button class="btn" data-act="acceptLegal">I understand. Continue</button></div>`;
+  }
+  function legalScreen() {
+    return `<div class="page"><button class="back" data-act="closeLegal">← Back</button><div class="hero"><div class="eyebrow">Last updated ${esc(W.LEGAL_UPDATED)}</div><h1 class="small">Terms, privacy &amp; safety</h1></div>
+      <div class="card legal">${legalBody()}</div></div>`;
+  }
+  const safetyFoot = `<p class="fine">W.U.T.'s Cooking gives general food ideas, not medical advice. Nutrition numbers are estimates. Always check ingredient labels for allergens.</p>`;
+
   // ---------- screens ----------
   function home() {
     const plan = state.plan, pos = W.planPosition(plan), T = W.resolveTargets(state);
@@ -311,7 +336,7 @@
         ${state.newLen === "custom" ? inp("Days (1–60)", "newLenCustom", { type: "number", min: 1, max: 60 }) : "<span></span>"}</div>
         <button class="btn" data-act="newplan">🔄 Generate new plan</button><button class="btn ghost" data-act="go" data-arg="profile">Edit goals &amp; profile</button></div>
       ${done ? "" : `<button class="btn alt" data-act="install">📱 Add to Home Screen</button>`}
-      <p class="fine">W.U.T.'s Cooking offers general food ideas, not medical advice. Nutrition numbers are estimates.</p>
+      ${safetyFoot}${legalLink()}
     </div>`;
   }
   function history() {
@@ -438,11 +463,11 @@
       ${card("Body goal", bodyGoalStep)}${card("Vitamin boosts", bodyVitamins)}${card("Mineral boosts", bodyMinerals)}${card("Beauty &amp; aesthetics", bodyBeauty)}${card("Wellness", bodyWellness)}${card("Everyday eating", bodyLife)}
       ${card("Targets &amp; plan length", body4)}
       <button class="btn" data-act="rebuild">✨ Save &amp; rebuild my plan</button>
-      <button class="btn ghost danger" data-act="reset">Reset everything</button></div>`;
+      <button class="btn ghost danger" data-act="reset">Reset everything</button>${safetyFoot}${legalLink()}</div>`;
   }
 
   function top() {
-    return `<header class="top"><div class="brand">W.U.T.<span>'s Cooking</span><small>What's Ur Type?</small></div>${state.screen === "onboarding" ? "" : `<button type="button" class="pill" data-act="go" data-arg="profile" title="Your diet. Tap to change it" aria-label="${esc(dietPillText())}. Tap to change your diet">${esc(dietPillText())}</button>`}</header>`;
+    return `<header class="top"><div class="brand">W.U.T.<span>'s Cooking</span><small>What's Ur Type?</small></div>${state.screen === "onboarding" || state.legalV < W.LEGAL_VERSION ? "" : `<button type="button" class="pill" data-act="go" data-arg="profile" title="Your diet. Tap to change it" aria-label="${esc(dietPillText())}. Tap to change your diet">${esc(dietPillText())}</button>`}</header>`;
   }
   function nav() {
     const cur = state.screen === "recipe" || state.screen === "add" ? "recipes" : state.screen;
@@ -453,14 +478,17 @@
   function render(keep) {
     const y = window.scrollY;
     let html;
-    if (state.screen === "onboarding") html = onboarding();
+    const gated = state.legalV < W.LEGAL_VERSION && state.screen !== "legal";
+    if (gated) html = legalGate();
+    else if (state.screen === "legal") html = legalScreen();
+    else if (state.screen === "onboarding") html = onboarding();
     else {
       ensurePlan();
       if (state.screen === "recipe" && !(state.view && W.recipeById(state.view.rid, state))) state.screen = "home";
       const map = { home, plan: planScreen, recipes, recipe: recipeView, add: addScreen, shop, profile, nutty: () => W.nutty.view(state.nutty) };
       html = (map[state.screen] || home)();
     }
-    $app.innerHTML = `<div class="shell">${top()}${html}${state.screen === "onboarding" ? "" : nav()}</div>`;
+    $app.innerHTML = `<div class="shell">${top()}${html}${state.screen === "onboarding" || gated || state.screen === "legal" ? "" : nav()}</div>`;
     window.scrollTo(0, keep ? y : 0);
   }
   function go(screen) { state.screen = screen; state.undo = null; save(); render(); }
@@ -498,7 +526,14 @@
   }
 
   const ACT = {
-    go: (a) => go(a),
+    go: (a) => { if (a === "legal" && state.screen !== "legal") state.legalPrev = state.screen; go(a); },
+    legalFull: () => { if (state.screen !== "legal") state.legalPrev = state.screen; go("legal"); },
+    closeLegal: () => go(state.legalPrev && state.legalPrev !== "legal" ? state.legalPrev : (state.legalV >= W.LEGAL_VERSION ? "home" : "onboarding")),
+    legalAge: (a, el) => { state.legalAge = el.checked; save(); render(true); },
+    legalCheck: (a, el) => { state.legalCheck = el.checked; save(); render(true); },
+    acceptLegal: () => {
+      if (!state.legalAge || !state.legalCheck) { toast("Please tick both boxes to continue"); return; }
+      state.legalV = W.LEGAL_VERSION; state.legalAcceptedAt = new Date().toISOString(); save(); render(); },
     back: () => { state.step = Math.max(1, state.step - 1); save(); render(); },
     next: () => { if (state.step < visSteps().length) { state.step++; save(); render(); } else finishOnboarding(); },
     skip: () => ACT.next(),

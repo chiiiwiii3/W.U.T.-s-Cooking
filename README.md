@@ -36,3 +36,16 @@ Calories, macros and vitamins are computed from the ingredient list, so they are
 
 ## Developing
 Open `index.html` through any static server (e.g. `npx http-server`). A service worker caches the files for offline use. It fetches fresh files first, so changes show up on reload.
+
+## Legal, safety & privacy (in the app)
+- **First-run acceptance screen** (18+ confirmation and agreement to the notice; re-asked whenever `WUT.LEGAL_VERSION` in `legal.js` is raised)
+- **Terms, Privacy & Safety page** (`legal.js`): not medical advice, allergy limits, pregnancy/conditions/eating disorders/under-18, nutrition and calculator limits, diet labels (halal/kosher/blood type), cooking safety, privacy (data stays on the device; Google Fonts and GitHub Pages see IP addresses), user content, no warranty and limitation of liability
+- Warnings next to the allergy and health-condition inputs, and a disclaimer + link in the Home and Profile footers
+
+## Before you launch commercially
+This text is a good-faith set of disclosures, **not legal advice, and it cannot guarantee you won't be sued**. Before charging money:
+1. Have a lawyer in your jurisdiction review `legal.js`. Add your business name, contact email, governing law and (if needed) dispute-resolution terms.
+2. Add a real contact address for safety reports, and a way to report a bad or unsafe recipe.
+3. If you add accounts, sync, analytics, payments or AI features, update the privacy section and get consent as required (GDPR, CCPA, Washington My Health My Data, etc.).
+4. Get a registered dietitian to review the health-condition, pregnancy and cycle logic, and consider product-liability / professional-liability insurance.
+5. Keep the USDA-based nutrition data cited, and re-check it when you add recipes.
