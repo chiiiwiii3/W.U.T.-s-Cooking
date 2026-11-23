@@ -53,3 +53,5 @@ This text is a good-faith set of disclosures, **not legal advice, and it cannot 
 
 ## Security
 See [SECURITY.md](SECURITY.md) for the protections built in (CSP, escaping, upload checks, optional PIN lock) and a GitHub account checklist.
+
+See also [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) and [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md).
