@@ -14,7 +14,7 @@
 
   function defaults() {
     return {
-      v: 3, screen: "onboarding", step: 1, view: null, back: "home", legalV: 0, legalCheck: false, legalAge: false, allergyOk: 0,
+      v: 3, screen: "onboarding", step: 1, view: null, back: "home", legalV: 0, legalCheck: false, legalAge: false, allergyOk: 0, lock: null, lockFail: 0, lockUntil: 0,
       profile: { name: "", bdM: "", bdD: "", bdY: "", age: "", ageTxt: "", sex: "", sexTxt: "", repro: "", trimester: "", cycle: "", periodDate: "", cycleLen: "28", units: "us", weight: "", weightTxt: "", heightSel: "", heightTxt: "", heightFt: "", heightIn: "", heightCm: "", ethnicity: "", ethnicityTxt: "", bloodType: "", bloodTypeTxt: "", diet: "unsure", dietTxt: "", allergies: [], conditions: [] },
       goals: { body: "", micros: [], beauty: [], wellness: [], lifestyle: [] },
       targets: { cal: "", p: "", c: "", f: "" },
@@ -26,6 +26,8 @@
       draft: { name: "", meal: "Lunch", ingredients: "", steps: "", storage: "", cal: "", p: "", c: "", f: "", files: [] }
     };
   }
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf", "text/plain", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+  const okFile = (f) => !!f && typeof f === "object" && ALLOWED_TYPES.includes(f.type) && typeof f.data === "string" && /^data:[\w.+\/-]+;base64,[A-Za-z0-9+\/=]*$/.test(f.data) && typeof f.name === "string";
   function load() {
     const d = defaults();
     try {
@@ -33,10 +35,13 @@
       if (s && s.v === 3) {
         if (s.profile) { s.profile.ageTxt = ""; s.profile.sexTxt = ""; s.profile.bloodTypeTxt = "";
           const wt = parseFloat(s.profile.weightTxt); if (wt > 0 && !s.profile.weight) s.profile.weight = String(Math.round(wt)); s.profile.weightTxt = ""; s.profile.heightTxt = ""; }
-        for (const k in s) d[k] = d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && s[k] && typeof s[k] === "object" ? Object.assign(d[k], s[k]) : s[k];
+        for (const k in s) if (k !== "__proto__" && k !== "constructor" && k !== "prototype") d[k] = d[k] && typeof d[k] === "object" && !Array.isArray(d[k]) && s[k] && typeof s[k] === "object" ? Object.assign(d[k], s[k]) : s[k];
       }
     } catch (e) { /* first run or storage blocked */ }
     if (d.legalV < W.LEGAL_VERSION) { d.legalAge = false; d.legalCheck = false; }
+    // never trust stored files: keep only allowed types with a well-formed data URL
+    if (Array.isArray(d.myRecipes)) d.myRecipes.forEach((r) => { if (r && typeof r === "object") r.files = Array.isArray(r.files) ? r.files.filter(okFile) : []; });
+    if (d.draft && typeof d.draft === "object") d.draft.files = Array.isArray(d.draft.files) ? d.draft.files.filter(okFile) : [];
     return d;
   }
   let state = load();
@@ -45,6 +50,7 @@
   function getPath(path) { return path.split(".").reduce((o, k) => (o == null ? o : o[k]), state); }
   function setPath(path, v) {
     const ks = path.split("."), last = ks.pop();
+    if ([...ks, last].some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) return;
     const o = ks.reduce((a, k) => a[k], state);
     o[last] = v;
   }
@@ -496,11 +502,41 @@
       ${card("About you", bodyBasics)}${card("Height &amp; weight", bodyMeasure)}${card("Ethnicity &amp; blood type", bodyEthno)}${card("Diet", bodyDiet)}${card("Allergies", bodyAllergies)}${card("Health conditions", bodyConditions)}${state.profile.sex === "female" ? card("Pregnancy &amp; cycle", bodyRepro) : ""}
       ${card("Body goal", bodyGoalStep)}${card("Vitamin boosts", bodyVitamins)}${card("Mineral boosts", bodyMinerals)}${card("Beauty &amp; aesthetics", bodyBeauty)}${card("Wellness", bodyWellness)}${card("Everyday eating", bodyLife)}
       ${card("Targets &amp; plan length", body4)}
+      ${lockCard()}
       <button class="btn" data-act="rebuild">✨ Save &amp; rebuild my plan</button>
       <button class="btn ghost" data-act="exportData">⬇️ Download my data</button>
       <button class="btn ghost danger" data-act="reset">Reset everything</button>${safetyFoot}${legalLink()}</div>`;
   }
 
+  // ---------- app lock (screen lock with a PIN; does not encrypt stored data) ----------
+  let locked = !!(state.lock && state.lock.h), hiddenAt = 0;
+  const te = new TextEncoder();
+  const toB64 = (u8) => btoa(String.fromCharCode(...u8)), fromB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+  async function hashPin(pin, salt) {
+    const k = await crypto.subtle.importKey("raw", te.encode(pin), "PBKDF2", false, ["deriveBits"]);
+    return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" }, k, 256));
+  }
+  const sameBytes = (a, b) => { if (a.length !== b.length) return false; let x = 0; for (let i = 0; i < a.length; i++) x |= a[i] ^ b[i]; return x === 0; };
+  async function checkPin(pin) { try { return sameBytes(await hashPin(pin, fromB64(state.lock.s)), fromB64(state.lock.h)); } catch (e) { return false; } }
+  const validPin = (p) => /^\d{4,8}$/.test(p);
+  function lockScreen() {
+    const wait = Math.ceil((state.lockUntil - Date.now()) / 1000);
+    return `<div class="shell"><main id="main" tabindex="-1"><div class="page"><div class="hero"><div class="eyebrow">Locked 🔒</div><h1 class="small">Enter your PIN</h1><p>Your meal prep is private on this device.</p></div>
+      <div class="card"><label class="field"><span>PIN</span><input id="lockPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"></label>
+      ${wait > 0 ? `<div class="note">Too many tries. Wait ${wait} seconds.</div>` : ""}
+      <button type="button" class="btn" data-act="unlock">Unlock</button>
+      <button type="button" class="linkish center" data-act="forgotPin">Forgot PIN? Erase everything</button></div></div></main></div>`;
+  }
+  function lockCard() {
+    const on = !!(state.lock && state.lock.h);
+    return `<div class="card"><h3>🔒 App lock</h3>
+      <p class="hint">Ask for a PIN when the app opens or after it has been away for a couple of minutes. This stops other people picking up your phone from seeing your plan. It does not encrypt your data, so it is not protection against someone with technical access to your browser.</p>
+      ${on ? `<label class="field"><span>Current PIN <small>needed to turn it off</small></span><input id="lockCur" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+        <button type="button" class="btn ghost" data-act="lockNow">🔒 Lock now</button><button type="button" class="btn ghost" data-act="lockOff">Turn off app lock</button>`
+      : `<label class="field"><span>New PIN <small>4 to 8 digits</small></span><input id="lockNew" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+        <label class="field"><span>Repeat PIN</span><input id="lockNew2" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>
+        <button type="button" class="btn" data-act="lockOn">Turn on app lock</button><p class="fine">If you forget the PIN, the only way back in is to erase everything on this device.</p>`}</div>`;
+  }
   function top() {
     return `<header class="top"><div class="brand">W.U.T.<span>'s Cooking</span><small>What's Ur Type?</small></div>${state.screen === "onboarding" || state.legalV < W.LEGAL_VERSION ? "" : `<button type="button" class="pill" data-act="go" data-arg="profile" title="Your diet. Tap to change it" aria-label="${esc(dietPillText())}. Tap to change your diet">${esc(dietPillText())}</button>`}</header>`;
   }
@@ -512,6 +548,7 @@
 
   function render(keep) {
     const y = window.scrollY;
+    if (locked) { $app.innerHTML = lockScreen(); const pi = document.getElementById("lockPin"); if (pi) pi.focus(); return; }
     let html;
     const legalish = state.screen === "legal" || state.screen === "privacy";
     const gated = state.legalV < W.LEGAL_VERSION && !legalish;
@@ -572,6 +609,27 @@
   const ACT = {
     go: (a) => { if ((a === "legal" || a === "privacy") && state.screen !== "legal" && state.screen !== "privacy") state.legalPrev = state.screen; go(a); },
     legalFull: () => { if (state.screen !== "legal" && state.screen !== "privacy") state.legalPrev = state.screen; go("legal"); },
+    unlock: async () => {
+      const pi = document.getElementById("lockPin"); if (!pi) return;
+      if (Date.now() < state.lockUntil) { render(); return; }
+      if (await checkPin(pi.value)) { locked = false; state.lockFail = 0; state.lockUntil = 0; save(); render(); return; }
+      state.lockFail = (state.lockFail || 0) + 1;
+      if (state.lockFail >= 5) state.lockUntil = Date.now() + Math.min(900, 30 * 2 ** (state.lockFail - 5)) * 1000;
+      save(); render(); toast("That PIN isn't right");
+    },
+    forgotPin: () => { if (confirm("This erases your profile, plan, recipes and food log from this device. Continue?")) { state = defaults(); locked = false; save(); render(); } },
+    lockOn: async () => {
+      const a = document.getElementById("lockNew").value, b = document.getElementById("lockNew2").value;
+      if (!validPin(a)) { toast("Use 4 to 8 digits"); return; }
+      if (a !== b) { toast("The two PINs don't match"); return; }
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      state.lock = { s: toB64(salt), h: toB64(await hashPin(a, salt)) }; state.lockFail = 0; state.lockUntil = 0; save(); render(true); toast("App lock is on 🔒");
+    },
+    lockOff: async () => {
+      const c = document.getElementById("lockCur").value;
+      if (await checkPin(c)) { state.lock = null; save(); render(true); toast("App lock is off"); } else toast("That PIN isn't right");
+    },
+    lockNow: () => { locked = true; render(); },
     fixAge: () => { const p = state.profile; p.age = ""; p.bdM = ""; p.bdD = ""; p.bdY = ""; state.screen = "onboarding"; state.step = 1; save(); render(); },
     exportData: () => {
       try {
@@ -726,10 +784,13 @@
       if (state.draft.files.length >= MAX_FILES) { toast(`Up to ${MAX_FILES} files per recipe`); break; }
       try {
         let data, type = file.type || "application/octet-stream", name = file.name || "photo.jpg";
+        if (!type.startsWith("image/") && !ALLOWED_TYPES.includes(type)) { toast("Only photos, PDFs, text and Word files can be added"); continue; }
         if (type.startsWith("image/")) { data = await shrinkImage(file); type = "image/jpeg"; name = name.replace(/\.[^.]+$/, "") + ".jpg"; }
         else { if (file.size > MAX_FILE) { toast(`${name} is too big (max ${Math.round(MAX_FILE / 1e5) / 10} MB)`); continue; } data = await readFile(file); }
         if (data.length > MAX_FILE * 1.4) { toast(`${name} is too big`); continue; }
-        state.draft.files.push({ name, type, data, size: file.size });
+        const nf = { name: String(name).slice(0, 120), type, data, size: file.size };
+        if (!okFile(nf)) { toast("That file isn't supported"); continue; }
+        state.draft.files.push(nf);
       } catch (err) { toast("Couldn't read that file"); }
     }
     if (!save()) { state.draft.files.pop(); toast("Not enough storage for that file"); }
@@ -834,7 +895,11 @@
   }
   let lastFocus = null;
   function closeModal() { const m = document.getElementById("modal"); if (m) { m.remove(); if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); } }
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); if (e.key === "Enter" && e.target && e.target.id === "lockPin") ACT.unlock(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hiddenAt = Date.now();
+    else if (state.lock && state.lock.h && hiddenAt && Date.now() - hiddenAt > 2 * 60 * 1000) { locked = true; render(); }
+  });
   function installApp() {
     if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; return; }
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);

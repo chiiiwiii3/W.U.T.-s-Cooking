@@ -3,6 +3,8 @@
    before charging money or launching widely (see README "Before you launch commercially"). */
 (function (root) {
   "use strict";
+  // Clickjacking guard: if this page is loaded inside another site's frame, break out (or hide itself).
+  try { if (root.top && root.top !== root.self) root.top.location = root.location.href; } catch (e) { if (root.document) root.document.documentElement.style.display = "none"; }
   const W = (root.WUT = root.WUT || {});
   W.LEGAL_VERSION = 2;
   // OWNER: put your support address here (e.g. "safety@yourdomain.com"). While it is empty the Report form
@@ -136,7 +138,7 @@
       "The App is for people 18 and older. We do not knowingly collect information from anyone under 18, and we collect nothing from users at all. If a person under 18 has used the App, a parent or guardian can erase the App data (Profile, then Reset everything) or contact us.",
     ]],
     ["Security and where data goes", [
-      "Data stays on your device, so its safety depends on your device's security. No method of storage is perfectly secure. The hosting provider may process technical data in the United States or elsewhere.",
+      "Data stays on your device, so its safety depends on your device's security. No method of storage is perfectly secure. You can turn on an optional PIN lock in Profile. It hides the app from people who pick up your device but does not encrypt your data. The hosting provider may process technical data in the United States or elsewhere.",
     ]],
     ["If this changes", [
       "If we ever add accounts, sync, analytics or anything else that sends data off your device, we will update this policy first and ask for your consent where the law requires it. We will tell you about important changes in the App."

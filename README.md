@@ -50,3 +50,6 @@ This text is a good-faith set of disclosures, **not legal advice, and it cannot 
 3. If you add accounts, sync, analytics, payments or AI features, update the privacy section and get consent as required (GDPR, CCPA, Washington My Health My Data, etc.).
 4. Get a registered dietitian to review the health-condition, pregnancy and cycle logic, and consider product-liability / professional-liability insurance.
 5. Keep the USDA-based nutrition data cited, and re-check it when you add recipes.
+
+## Security
+See [SECURITY.md](SECURITY.md) for the protections built in (CSP, escaping, upload checks, optional PIN lock) and a GitHub account checklist.
