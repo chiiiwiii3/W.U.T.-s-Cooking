@@ -207,10 +207,8 @@
       </div>`;
   }
 
-  // ---------- 3D chef squirrel ----------
-  // Layers: shadow on the floor, then tilt (follows finger/mouse) > float (bobbing/swaying) > spin (tap) > image.
   function mascot(cls) {
-    return `<button type="button" class="mascot3d ${cls || ""}" data-act="spin" aria-label="Chef squirrel. Tap to make him spin"><span class="m-shadow"></span><span class="m-tilt"><span class="m-float"><span class="m-spin"><img src="icons/wut-squirrel.webp" alt="" width="420" height="630" draggable="false"></span></span></span></button>`;
+    return "";
   }
 
   const STEPS = [
@@ -294,12 +292,12 @@
     return out + (inList ? "</ul>" : "");
   }).join("");
   const reportBtn = (rid) => `<button type="button" class="linkish center" data-act="report" ${rid ? `data-rid="${esc(rid)}"` : ""}>⚠️ Report a problem</button>`;
-  const legalLink = () => `<button type="button" class="linkish center" data-act="go" data-arg="legal">Terms, privacy &amp; safety</button>`;
+  const legalLink = () => `<div class="legallinks"><button type="button" class="linkish center" data-act="go" data-arg="legal">Terms &amp; safety</button><button type="button" class="linkish center" data-act="go" data-arg="privacy">Privacy Policy</button></div><p class="fine copyright">© 2026 ${esc(W.OPERATOR_NAME || "W.U.T.'s Cooking")}</p>`;
   function legalGate() {
     return `<div class="page"><div class="hero hasmascot">${mascot()}<div class="eyebrow">Before we start</div><h1>Please read this</h1><p>It's short, and it matters for your safety.</p></div>
       <div class="card legal"><ul>${W.LEGAL_SHORT.map((t) => `<li>${t}</li>`).join("")}</ul>
         <p class="fine"><button type="button" class="linkish" data-act="legalFull">Read the full Terms, Privacy &amp; Safety notice</button></p></div>
-      <label class="shopitem consent"><input type="checkbox" data-act="legalAge" ${state.legalAge ? "checked" : ""}><span>I am 18 or older, or I'm using this with a parent, guardian or doctor.</span></label>
+      <label class="shopitem consent"><input type="checkbox" data-act="legalAge" ${state.legalAge ? "checked" : ""}><span>I am 18 or older.</span></label>
       <label class="shopitem consent"><input type="checkbox" data-act="legalCheck" ${state.legalCheck ? "checked" : ""}><span>I have read and agree to the Terms, Privacy &amp; Safety notice. I understand this is not medical advice and I will check allergens myself.</span></label>
       <button class="btn" data-act="acceptLegal">I understand. Continue</button></div>`;
   }
@@ -307,7 +305,24 @@
     return `<div class="page"><button class="back" data-act="closeLegal">← Back</button><div class="hero"><div class="eyebrow">Last updated ${esc(W.LEGAL_UPDATED)}</div><h1 class="small">Terms, privacy &amp; safety</h1></div>
       <div class="card legal">${legalBody()}</div>${reportBtn("")}</div>`;
   }
-  const safetyFoot = `<p class="fine">W.U.T.'s Cooking gives general food ideas, not medical advice. Nutrition numbers are estimates. Always check ingredient labels for allergens.</p>`;
+  function privacyScreen() {
+    const body = W.PRIVACY_SECTIONS.map(([h, ps]) => {
+      let out = `<h3>${esc(h)}</h3>`, inList = false;
+      ps.forEach((t) => { const li = t.startsWith("- "); if (li && !inList) { out += "<ul>"; inList = true; } if (!li && inList) { out += "</ul>"; inList = false; } out += para(t); });
+      return out + (inList ? "</ul>" : "");
+    }).join("");
+    return `<div class="page"><button class="back" data-act="closeLegal">← Back</button><div class="hero"><div class="eyebrow">Last updated ${esc(W.LEGAL_UPDATED)}</div><h1 class="small">Privacy Policy</h1></div>
+      <div class="card legal">${body}</div><button type="button" class="btn ghost" data-act="exportData">⬇️ Download my data</button>${reportBtn("")}</div>`;
+  }
+  function underageScreen() {
+    return `<div class="page"><div class="hero"><div class="eyebrow">Adults only</div><h1 class="small">This app is for people 18 and older</h1></div>
+      <div class="card"><p>Based on the age or birthday entered, you're under 18. Kids and teens have different nutrition needs, so we can't offer meal plans or health tools here. Please talk to a parent, guardian or doctor about eating well.</p>
+      <p class="hint">Entered it wrong? You can fix it.</p>
+      <button type="button" class="btn" data-act="fixAge">✏️ Fix my age or birthday</button>
+      <button type="button" class="btn ghost danger" data-act="reset">Erase everything</button></div></div>`;
+  }
+  const isMinor = () => { const a = W.effAge(state.profile); return a > 0 && a < 18; };
+  const safetyFoot = `<p class="fine">W.U.T.'s Cooking gives general food ideas, not medical advice. Nutrition numbers are estimates. Always check ingredient labels for allergens. Food suggestions are not meant to diagnose, treat, cure or prevent any disease, and these statements have not been evaluated by the FDA.</p>`;
 
   // ---------- screens ----------
   function home() {
@@ -413,6 +428,7 @@
     return `<div class="page"><button class="back" data-act="go" data-arg="recipes">← Back</button>
       <div class="hero"><div class="eyebrow">Cookbook</div><h1>Add my recipe</h1></div>
       ${allergyList().length ? `<div class="note">⚠️ Recipes you add are checked only by the words you type. Photos and files are <b>not</b> checked for your allergies at all. Check them yourself.</div>` : ""}
+      <div class="card"><label class="field"><span>Got a shared recipe? <small>paste it here</small></span><textarea id="importBox" rows="3" placeholder="Paste a recipe someone sent you"></textarea></label><button type="button" class="btn ghost small" data-act="importRecipe">📥 Import it</button></div>
       <div class="card">${inp("Recipe name", "draft.name", { ph: "e.g. Grandma's chili" })}
       ${sel("Meal", "draft.meal", [["Breakfast", "Breakfast"], ["Lunch", "Lunch"], ["Dinner", "Dinner"], ["Snack", "Snack"]])}
       <label class="field"><span>Ingredients <small>one per line, with amounts</small></span><textarea rows="5" data-bind="draft.ingredients" placeholder="2 cups black beans&#10;1 onion, diced">${esc(state.draft.ingredients)}</textarea></label>
@@ -451,6 +467,7 @@
       <div class="card"><h3>🛒 Ingredients</h3><ul class="list">${ings}</ul>${!r.user && r.pantry && r.pantry.length ? `<p class="fine"><b>Pantry:</b> ${esc(r.pantry.join(", "))}</p>` : ""}</div>
       <div class="card"><h3>👩‍🍳 How to cook</h3>${steps || "<p class='muted'>No steps added.</p>"}</div>
       <div class="card"><h3>📦 Storing</h3>${st}</div>
+      <button type="button" class="btn ghost" data-act="shareRecipe" data-rid="${esc(r.id)}">📤 Share recipe</button>
       ${reportBtn(r.id)}
       ${r.user ? `<button class="btn ghost danger" data-act="delRecipe" data-rid="${esc(r.id)}">Delete this recipe</button>` : ""}</div>`;
   }
@@ -480,6 +497,7 @@
       ${card("Body goal", bodyGoalStep)}${card("Vitamin boosts", bodyVitamins)}${card("Mineral boosts", bodyMinerals)}${card("Beauty &amp; aesthetics", bodyBeauty)}${card("Wellness", bodyWellness)}${card("Everyday eating", bodyLife)}
       ${card("Targets &amp; plan length", body4)}
       <button class="btn" data-act="rebuild">✨ Save &amp; rebuild my plan</button>
+      <button class="btn ghost" data-act="exportData">⬇️ Download my data</button>
       <button class="btn ghost danger" data-act="reset">Reset everything</button>${safetyFoot}${legalLink()}</div>`;
   }
 
@@ -495,9 +513,13 @@
   function render(keep) {
     const y = window.scrollY;
     let html;
-    const gated = state.legalV < W.LEGAL_VERSION && state.screen !== "legal";
-    const allergyGate = !gated && state.screen !== "legal" && state.screen !== "onboarding" && needsAllergyCheck();
+    const legalish = state.screen === "legal" || state.screen === "privacy";
+    const gated = state.legalV < W.LEGAL_VERSION && !legalish;
+    const minor = !gated && !legalish && isMinor();
+    const allergyGate = !gated && !minor && !legalish && state.screen !== "onboarding" && needsAllergyCheck();
     if (gated) html = legalGate();
+    else if (minor) html = underageScreen();
+    else if (state.screen === "privacy") html = privacyScreen();
     else if (allergyGate) html = allergyCheckScreen();
     else if (state.screen === "legal") html = legalScreen();
     else if (state.screen === "onboarding") html = onboarding();
@@ -507,9 +529,10 @@
       const map = { home, plan: planScreen, recipes, recipe: recipeView, add: addScreen, shop, profile, nutty: () => W.nutty.view(state.nutty) };
       html = (map[state.screen] || home)();
     }
-    const banner = ["home", "plan", "recipes", "recipe", "shop"].includes(state.screen) && !allergyGate && !gated ? allergyBanner() : "";
-    $app.innerHTML = `<div class="shell">${top()}${banner}${html}${state.screen === "onboarding" || gated || allergyGate || state.screen === "legal" ? "" : nav()}</div>`;
+    const banner = ["home", "plan", "recipes", "recipe", "shop"].includes(state.screen) && !allergyGate && !gated && !minor ? allergyBanner() : "";
+    $app.innerHTML = `<a class="skip" href="#main">Skip to content</a><div class="shell">${top()}<main id="main" tabindex="-1">${banner}${html}</main>${state.screen === "onboarding" || gated || minor || allergyGate || legalish ? "" : nav()}</div>`;
     window.scrollTo(0, keep ? y : 0);
+    if (!keep) { const m = document.getElementById("main"); if (m) m.focus({ preventScroll: true }); }
   }
   function go(screen) { state.screen = screen; state.undo = null; save(); render(); }
 
@@ -547,9 +570,18 @@
   }
 
   const ACT = {
-    go: (a) => { if (a === "legal" && state.screen !== "legal") state.legalPrev = state.screen; go(a); },
-    legalFull: () => { if (state.screen !== "legal") state.legalPrev = state.screen; go("legal"); },
-    closeLegal: () => go(state.legalPrev && state.legalPrev !== "legal" ? state.legalPrev : (state.legalV >= W.LEGAL_VERSION ? "home" : "onboarding")),
+    go: (a) => { if ((a === "legal" || a === "privacy") && state.screen !== "legal" && state.screen !== "privacy") state.legalPrev = state.screen; go(a); },
+    legalFull: () => { if (state.screen !== "legal" && state.screen !== "privacy") state.legalPrev = state.screen; go("legal"); },
+    fixAge: () => { const p = state.profile; p.age = ""; p.bdM = ""; p.bdD = ""; p.bdY = ""; state.screen = "onboarding"; state.step = 1; save(); render(); },
+    exportData: () => {
+      try {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "wuts-cooking-my-data.json";
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast("Your data was downloaded ⬇️");
+      } catch (e) { toast("Couldn't download. Try another browser."); }
+    },
+    closeLegal: () => go(state.legalPrev && state.legalPrev !== "legal" && state.legalPrev !== "privacy" ? state.legalPrev : (state.legalV >= W.LEGAL_VERSION ? "home" : "onboarding")),
     allergyOk: () => { state.allergyOk = Date.now(); save(); render(); },
     allergyEdit: () => { state.allergyOk = Date.now(); state.screen = "profile"; save(); render(); toast("Update your allergies here"); },
     legalAge: (a, el) => { state.legalAge = el.checked; save(); render(true); },
@@ -658,14 +690,9 @@
       state.favorites = state.favorites.filter((x) => x !== id);
       go("recipes");
     },
-    spin: (a, el) => {
-      const sp = el.querySelector(".m-spin");
-      if (!sp) return;
-      sp.classList.remove("go"); void sp.offsetWidth; sp.classList.add("go");
-      const lines = ["Let's cook! 👨‍🍳", "Wheee! 🌀", "Nuts about meal prep! 🌰", "Eat your veggies! 🥦"];
-      toast(lines[Math.floor(Math.random() * lines.length)]);
-    },
     report: (a, el) => openReport(el.dataset.rid || ""),
+    shareRecipe: (a, el) => shareRecipe(el.dataset.rid),
+    importRecipe: () => importRecipe(),
     sendReport: () => sendReport(false),
     copyReport: () => sendReport(true),
     install: () => installApp(),
@@ -740,27 +767,6 @@
   });
 
 
-  // ---------- squirrel tilts toward your finger / mouse ----------
-  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let tiltRaf = 0, tiltX = 0, tiltY = 0;
-  function applyTilt() {
-    tiltRaf = 0;
-    document.querySelectorAll(".mascot3d").forEach((m) => {
-      const r = m.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const dx = Math.max(-1, Math.min(1, (tiltX - cx) / 260)), dy = Math.max(-1, Math.min(1, (tiltY - cy) / 260));
-      m.style.setProperty("--ry", (dx * 24).toFixed(1) + "deg");
-      m.style.setProperty("--rx", (-dy * 14).toFixed(1) + "deg");
-    });
-  }
-  function resetTilt() {
-    document.querySelectorAll(".mascot3d").forEach((m) => { m.style.setProperty("--ry", "0deg"); m.style.setProperty("--rx", "0deg"); });
-  }
-  if (!reduceMotion) {
-    document.addEventListener("pointermove", (e) => { tiltX = e.clientX; tiltY = e.clientY; if (!tiltRaf) tiltRaf = requestAnimationFrame(applyTilt); }, { passive: true });
-    document.addEventListener("pointerup", (e) => { if (e.pointerType !== "mouse") setTimeout(resetTilt, 600); });
-    document.addEventListener("pointerleave", resetTilt);
-  }
-
   // ---------- add to home screen ----------
   let deferredPrompt = null;
   const isInstalled = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
@@ -783,7 +789,36 @@
       <button class="btn" data-act="${W.SUPPORT_EMAIL ? "sendReport" : "copyReport"}">${W.SUPPORT_EMAIL ? "📧 Email report" : "📋 Copy report"}</button>
       ${W.SUPPORT_EMAIL ? `<button class="btn ghost" data-act="copyReport">📋 Copy instead</button>` : ""}
       <button class="btn ghost" data-act="closeModal">Cancel</button></div>`;
+    lastFocus = document.activeElement;
     document.body.appendChild(d);
+    const f0 = d.querySelector("select, textarea, button"); if (f0) f0.focus();
+  }
+  // ---------- share / import a recipe (text only, sent by the user through their own apps) ----------
+  const b64 = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  const unb64 = (t) => JSON.parse(decodeURIComponent(escape(atob(t))));
+  function shareRecipe(rid) {
+    const r = W.recipeById(rid, state); if (!r) return;
+    const n = W.nutr(r, 1);
+    const ings = r.user ? r.ingLines : r.ing.map(([id, amt]) => { const l = W.fmtRecipeLine(id, amt); return `${l.qty} ${l.label}`; });
+    const steps = r.steps || [];
+    const pack = { name: r.name, meal: r.meal, ing: ings, steps, storage: r.storage || "", nut: { cal: Math.round(n.cal), p: Math.round(n.p), c: Math.round(n.c), f: Math.round(n.f) } };
+    const text = `${r.name} (${r.meal})\n\nIngredients:\n${ings.map((x) => "- " + x).join("\n")}\n\nSteps:\n${steps.map((x, i) => `${i + 1}. ${x}`).join("\n")}\n\nAbout ${pack.nut.cal} cal per serving (estimate).\nShared from W.U.T.'s Cooking. Not medical advice. Check every ingredient for your allergies.\n\nWUT-RECIPE:${b64(pack)}`;
+    if (navigator.share) navigator.share({ title: r.name, text }).catch(() => {});
+    else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast("Recipe copied. Paste it into a message 📤"), () => toast("Couldn't copy"));
+    else toast("Sharing isn't available in this browser");
+  }
+  function importRecipe() {
+    const el = document.getElementById("importBox"), m = el && /WUT-RECIPE:([A-Za-z0-9+/=]+)/.exec(el.value);
+    if (!m) { toast("Paste the whole shared recipe, including the WUT-RECIPE line"); return; }
+    let p; try { p = unb64(m[1]); } catch (e) { toast("That code looks damaged"); return; }
+    const str = (v, n) => String(v == null ? "" : v).slice(0, n);
+    const arr = (v) => (Array.isArray(v) ? v.slice(0, 60).map((x) => str(x, 300)).filter(Boolean) : []);
+    const meal = ["Breakfast", "Lunch", "Dinner", "Snack"].includes(p.meal) ? p.meal : "Dinner";
+    const num = (v) => { const n = parseFloat(v); return n >= 0 && n < 5000 ? n : 0; };
+    const name = str(p.name, 80).trim(); if (!name) { toast("That recipe has no name"); return; }
+    const id = "u" + Date.now();
+    state.myRecipes.push({ id, user: true, name, meal, emoji: SLOT_EMOJI[meal] || "🍽️", ingLines: arr(p.ing), steps: arr(p.steps), storage: str(p.storage, 300), files: [], nut: { cal: num(p.nut && p.nut.cal), p: num(p.nut && p.nut.p), c: num(p.nut && p.nut.c), f: num(p.nut && p.nut.f) } });
+    state.screen = "recipes"; save(); render(); toast("Recipe imported. Check its ingredients for your allergies ⚠️");
   }
   function sendReport(copyOnly) {
     const sheet = document.querySelector("#modal .sheet"); if (!sheet) return;
@@ -797,7 +832,9 @@
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(body).then(() => { toast("Report copied 📋"); closeModal(); }, () => toast("Couldn't copy. Select the text instead."));
     else toast("Copy isn't available in this browser");
   }
-  function closeModal() { const m = document.getElementById("modal"); if (m) m.remove(); }
+  let lastFocus = null;
+  function closeModal() { const m = document.getElementById("modal"); if (m) { m.remove(); if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); } }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
   function installApp() {
     if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; return; }
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);

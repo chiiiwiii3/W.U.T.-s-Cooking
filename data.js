@@ -433,7 +433,7 @@
     { id: "halal", label: "Halal", desc: "No pork or alcohol in any meal. Buy certified halal meat." },
     { id: "kosher", label: "Kosher", desc: "No shellfish and no meat-and-dairy combos. Buy kosher-certified products." },
     { id: "highprotein", label: "High-protein", desc: "Meals chosen to be extra rich in protein." },
-    { id: "antiinflam", label: "Anti-inflammatory", desc: "Leans on salmon, berries, leafy greens, olive oil, ginger and walnuts." },
+    { id: "antiinflam", label: "Anti-inflammatory", desc: "Leans on foods often used in anti-inflammatory eating patterns: salmon, berries, leafy greens, olive oil, ginger and walnuts. A food style, not a treatment." },
     { id: "bloodtype", label: "Blood type diet", desc: "Favors foods popularly suggested for your ABO blood type. It's a popular idea, but strong scientific evidence for it is lacking." }
   ];
 
@@ -479,16 +479,16 @@
 
   // [key, label, short benefit]
   W.VITAMINS = [
-    ["A", "Vitamin A", "vision, skin, immunity"], ["B1", "Vitamin B1 (thiamin)", "energy from carbs, nerves"], ["B2", "Vitamin B2 (riboflavin)", "energy, skin, eyes"],
-    ["B3", "Vitamin B3 (niacin)", "energy, skin, digestion"], ["B5", "Vitamin B5 (pantothenic acid)", "energy, hormones"], ["B6", "Vitamin B6", "mood, brain, metabolism"],
+    ["A", "Vitamin A", "vision, skin, immune function"], ["B1", "Vitamin B1 (thiamin)", "energy from carbs, nerves"], ["B2", "Vitamin B2 (riboflavin)", "energy, skin, eyes"],
+    ["B3", "Vitamin B3 (niacin)", "energy, skin, digestion"], ["B5", "Vitamin B5 (pantothenic acid)", "energy metabolism"], ["B6", "Vitamin B6", "brain, metabolism"],
     ["B7", "Vitamin B7 (biotin)", "hair, skin, nails"], ["B9", "Vitamin B9 (folate)", "cell growth, pregnancy"], ["B12", "Vitamin B12", "energy, nerves, blood"],
-    ["C", "Vitamin C", "immunity, collagen, skin"], ["D", "Vitamin D", "bones, immunity, mood"], ["E", "Vitamin E", "skin, antioxidant"],
+    ["C", "Vitamin C", "immune function, collagen, skin"], ["D", "Vitamin D", "bones, immune function"], ["E", "Vitamin E", "skin, antioxidant"],
     ["VK", "Vitamin K", "blood clotting, bones"], ["Choline", "Choline", "brain, liver, memory"]
   ];
   W.MINERALS = [
-    ["Ca", "Calcium", "bones, teeth, muscles"], ["Cr", "Chromium", "blood sugar balance"], ["Cu", "Copper", "iron use, collagen"], ["I", "Iodine", "thyroid, metabolism"],
-    ["Fe", "Iron", "energy, red blood cells"], ["Mg", "Magnesium", "sleep, muscles, nerves"], ["Mn", "Manganese", "bones, metabolism"], ["Mo", "Molybdenum", "enzymes, detox"],
-    ["P", "Phosphorus", "bones, energy"], ["K", "Potassium", "blood pressure, muscles"], ["Se", "Selenium", "thyroid, antioxidant"], ["Zn", "Zinc", "immunity, skin, healing"],
+    ["Ca", "Calcium", "bones, teeth, muscles"], ["Cr", "Chromium", "carbohydrate metabolism"], ["Cu", "Copper", "iron use, collagen"], ["I", "Iodine", "thyroid, metabolism"],
+    ["Fe", "Iron", "energy, red blood cells"], ["Mg", "Magnesium", "sleep, muscles, nerves"], ["Mn", "Manganese", "bones, metabolism"], ["Mo", "Molybdenum", "enzymes"],
+    ["P", "Phosphorus", "bones, energy"], ["K", "Potassium", "fluid balance, muscles"], ["Se", "Selenium", "thyroid, antioxidant"], ["Zn", "Zinc", "immune function, skin, wound healing"],
     ["Na", "Lower sodium", "keeps meals low in salt"]
   ];
   W.OTHER_NUTRIENTS = [["o3", "Omega-3", "heart, brain, skin"], ["fiber", "Fiber", "digestion, fullness"]];
@@ -529,14 +529,14 @@
     ],
     micros: [...W.VITAMINS, ...W.MINERALS, ...W.OTHER_NUTRIENTS].map(([k, l]) => [k, l]),
     beauty: [
-      ["skin", "Glowing skin"], ["clear", "Clearer skin"], ["aging", "Anti-aging / fewer wrinkles"], ["tone", "Even skin tone"], ["hydrate", "Hydrated, dewy skin"],
-      ["hair", "Hair growth"], ["shine", "Shiny, healthy hair"], ["nails", "Strong nails"], ["eyes", "Bright, healthy eyes"], ["teeth", "Healthy teeth & gums"], ["puffy", "Less puffiness & bloating"]
+      ["skin", "Foods for skin health"], ["clear", "Foods for clear-looking skin"], ["aging", "Foods for healthy-looking aging"], ["tone", "Foods for even-looking skin tone"], ["hydrate", "Hydrating foods"],
+      ["hair", "Foods for hair health"], ["shine", "Foods for healthy-looking hair"], ["nails", "Foods for nail health"], ["eyes", "Foods for eye health"], ["teeth", "Foods for teeth & gums"], ["puffy", "Lower-sodium, lighter foods"]
     ],
     wellness: [
-      ["energy", "More energy"], ["digestion", "Better digestion"], ["gut", "Gut health"], ["heart", "Heart health"], ["bones", "Bone health"], ["immunity", "Stronger immunity"],
-      ["sleep", "Better sleep"], ["mood", "Mood & stress support"], ["focus", "Focus & brain health"], ["bloodsugar", "Steady blood sugar"], ["bp", "Healthy blood pressure"],
-      ["inflam", "Less inflammation"], ["joints", "Joint support"], ["cholesterol", "Healthy cholesterol"], ["hormones", "Hormone balance"], ["pms", "Easier PMS"],
-      ["menopause", "Menopause support"], ["recovery", "Workout recovery"], ["metabolism", "Healthy metabolism"]
+      ["energy", "Energy-supporting foods"], ["digestion", "Digestion-friendly foods"], ["gut", "Gut-friendly foods"], ["heart", "Heart-healthy eating"], ["bones", "Foods for bone health"], ["immunity", "Foods rich in immune-supporting nutrients"],
+      ["sleep", "Sleep-friendly foods"], ["mood", "Mood & stress-friendly foods"], ["focus", "Focus & brain-health foods"], ["bloodsugar", "Lower-glycemic foods"], ["bp", "Lower-sodium, heart-friendly foods"],
+      ["inflam", "Anti-inflammatory-style foods"], ["joints", "Foods for joint health"], ["cholesterol", "Cholesterol-friendly foods"], ["hormones", "Foods rich in nutrients for hormone health"], ["pms", "PMS-friendly foods"],
+      ["menopause", "Menopause-friendly foods"], ["recovery", "Post-workout foods"], ["metabolism", "Foods rich in nutrients for metabolism"]
     ],
     lifestyle: [["quick", "Quick meals (about 25 min or less)"], ["fastest", "Super fast (15 min or less)"], ["simple", "Few ingredients"], ["plants", "Eat more plants"], ["meatless", "More meat-free meals"], ["veggies", "More vegetables"], ["hiprot", "Extra protein"], ["fiber", "More fiber"], ["lowcarb", "Lower carb"], ["fish", "More fish & omega-3"], ["budget", "Budget-friendly"]]
   };

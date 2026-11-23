@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fredoka:wght@500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
 :root {
   --bg: #151316; --panel: #211d20; --panel2: #292326; --text: #fff9f2; --muted: #b9adb0;
@@ -8,19 +7,19 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; color: var(--text); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.45;
+  margin: 0; color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45;
   background: radial-gradient(circle at 15% -5%, #3a2f36 0, #151316 40%) fixed, var(--bg);
 }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
-h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
+h1, h2, h3 { font-family: ui-rounded, "Trebuchet MS", system-ui, sans-serif; margin: 0; }
 
 .shell { max-width: 540px; margin: 0 auto; padding-bottom: 104px; }
 .top { padding: 22px 20px 4px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.brand { font-family: "Playfair Display", serif; font-size: 24px; line-height: 1.1; }
+.brand { font-family: Georgia, "Times New Roman", serif; font-size: 24px; line-height: 1.1; }
 .brand span { color: var(--gold); }
-.brand small { display: block; font-family: "Fredoka", sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pink); margin-top: 3px; }
+.brand small { display: block; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--pink); margin-top: 3px; }
 .pill { border: 2px solid var(--gold-d); background: #2a2327; border-radius: 99px; padding: 6px 12px; color: var(--gold); font-size: 12px; font-weight: 700; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .page { padding: 8px 20px; }
@@ -48,7 +47,7 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 8px; margin: 10px 0; }
 .stat { background: #161316; border: 2px solid #34292d; border-radius: 14px; padding: 7px 6px; text-align: center; }
-.stat b { display: block; font-family: "Fredoka", sans-serif; font-size: 17px; }
+.stat b { display: block; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-size: 17px; }
 .stat span { font-size: 11px; color: var(--muted); }
 .tags { margin: 6px 0; font-size: 12px; color: var(--muted); }
 .tag { display: inline-block; background: #17332a; color: var(--green); border-radius: 99px; padding: 3px 9px; margin: 2px 3px 2px 0; font-weight: 700; font-size: 12px; }
@@ -56,7 +55,7 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 
 .btn {
   display: block; width: 100%; border: 0; border-radius: 18px; padding: 14px 16px; margin-top: 12px;
-  background: linear-gradient(180deg, #f0cf86, #d8a94c); color: #1c1710; font-family: "Fredoka", sans-serif; font-weight: 700; font-size: 17px;
+  background: linear-gradient(180deg, #f0cf86, #d8a94c); color: #1c1710; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-weight: 700; font-size: 17px;
   box-shadow: 0 5px 0 var(--gold-d); transition: transform .08s, box-shadow .08s;
 }
 .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-d); }
@@ -120,7 +119,7 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 .ring { position: relative; width: 150px; height: 150px; border-radius: 50%; margin: 6px auto 12px; background: conic-gradient(var(--green) var(--pct), #3a3235 0); display: grid; place-items: center; border: 3px solid #1a1719; }
 .ring::after { content: ""; position: absolute; inset: 14px; border-radius: 50%; background: #221d21; }
 .ring .inside { position: relative; z-index: 1; text-align: center; }
-.ring strong { display: block; font-family: "Fredoka", sans-serif; font-size: 30px; line-height: 1; }
+.ring strong { display: block; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-size: 30px; line-height: 1; }
 .ring small { color: var(--muted); font-size: 11px; }
 .bar { margin: 10px 0 0; text-align: left; }
 .barhead { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
@@ -141,7 +140,7 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 
 .list { padding-left: 20px; margin: 4px 0 0; line-height: 1.8; color: #e6dcde; }
 .step { display: flex; gap: 12px; margin: 14px 0; }
-.num { min-width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #1c1710; display: grid; place-items: center; font-family: "Fredoka", sans-serif; font-weight: 700; box-shadow: 0 3px 0 var(--gold-d); }
+.num { min-width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #1c1710; display: grid; place-items: center; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-weight: 700; box-shadow: 0 3px 0 var(--gold-d); }
 
 .shopitem { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #332b2f; align-items: flex-start; }
 .shopitem:last-child { border-bottom: 0; }
@@ -165,21 +164,7 @@ h1, h2, h3 { font-family: "Fredoka", "DM Sans", sans-serif; margin: 0; }
 .sheet ol { padding-left: 22px; line-height: 1.8; }
 
 
-/* ---------- 3D chef squirrel ---------- */
-.mascot3d { --rx: 0deg; --ry: 0deg; position: relative; display: block; width: 118px; height: 178px; padding: 0; border: 0; background: none; perspective: 700px; touch-action: manipulation; user-select: none; -webkit-user-select: none; flex: none; }
-.hero .mascot3d { position: absolute; right: -4px; top: 8px; }
-.mascot3d.inline { margin: 0 auto 8px; width: 108px; height: 162px; }
-.mascot3d > span { display: block; }
-.m-shadow { position: absolute; left: 50%; bottom: -2px; width: 78%; height: 14px; margin-left: -39%; border-radius: 50%; background: radial-gradient(ellipse at center, #000c 0, #0000 70%); animation: shadowpulse 3.2s ease-in-out infinite; }
-.m-tilt { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .25s ease-out; }
-.m-float { position: absolute; inset: 0; transform-style: preserve-3d; animation: squirrelfloat 3.2s ease-in-out infinite; }
-.m-spin { position: absolute; inset: 0; transform-style: preserve-3d; }
-.m-spin.go { animation: squirrelspin .9s cubic-bezier(.3,.7,.3,1); }
-.m-spin img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 10px 8px #0008) drop-shadow(0 0 1px #0009); }
-.hero.hasmascot { padding-right: 118px; min-height: 196px; }
-@keyframes squirrelfloat { 0%, 100% { transform: translateY(0) rotateY(-9deg) rotateZ(-1.5deg); } 50% { transform: translateY(-9px) rotateY(9deg) rotateZ(1.5deg); } }
 @keyframes shadowpulse { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(.82); opacity: .55; } }
-@keyframes squirrelspin { 0% { transform: translateY(0) rotateY(0) scale(1); } 35% { transform: translateY(-22px) rotateY(180deg) scale(1.1); } 70% { transform: translateY(-6px) rotateY(330deg) scale(1.04); } 100% { transform: translateY(0) rotateY(360deg) scale(1); } }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 @keyframes wiggle { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(-4deg) scale(1.05); } }
 @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -217,7 +202,7 @@ button.pill { cursor: pointer; font-family: inherit; }
 .ncard { padding: 0; overflow: hidden; }
 .nhead { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: 0; padding: 14px 16px; color: inherit; }
 .nhead > span:nth-child(2) { flex: 1; min-width: 0; }
-.nhead b { display: block; font-family: "Fredoka", sans-serif; font-size: 17px; }
+.nhead b { display: block; font-family: ui-rounded, "Trebuchet MS", sans-serif; font-size: 17px; }
 .nhead small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
 .nhead i { font-style: normal; font-size: 24px; color: var(--gold); width: 24px; text-align: center; }
 .nic { font-size: 26px; }
@@ -252,3 +237,11 @@ input[type=search] { width: 100%; }
 .legal ul { padding-left: 20px; margin: 6px 0; }
 .legal li { margin: 6px 0; }
 .shopitem.consent, .shopitem.consent span { opacity: 1; text-decoration: none; color: var(--text); }
+
+.allergy-note { position: sticky; top: 0; z-index: 5; }
+.skip { position: absolute; left: -999px; top: 0; background: var(--gold); color: #151316; padding: 10px 14px; border-radius: 0 0 12px 0; z-index: 99; font-weight: 700; }
+.skip:focus { left: 0; }
+main:focus { outline: none; }
+.chip, .pillbtn, .btn, .linkish, .nav button { min-height: 44px; }
+.linkish { padding: 10px 6px; }
+.copyright { text-align: center; }

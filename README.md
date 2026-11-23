@@ -44,7 +44,8 @@ Open `index.html` through any static server (e.g. `npx http-server`). A service 
 
 ## Before you launch commercially
 This text is a good-faith set of disclosures, **not legal advice, and it cannot guarantee you won't be sued**. Before charging money:
-1. Have a lawyer in your jurisdiction review `legal.js`. Add your business name, contact email, governing law and (if needed) dispute-resolution terms.
+1. Have a lawyer review `legal.js` (Florida governing law is already written in; ask them about disclaimers, the liability limit and whether to add arbitration). **Fill in `W.OPERATOR_NAME`, `W.OPERATOR_ADDRESS` and `W.SUPPORT_EMAIL` at the top of `legal.js`**, then raise `W.LEGAL_VERSION` so everyone re-accepts.
+   - Also in the app now: separate Privacy Policy page, Download my data / Reset everything, 18+ only (under-18 birthdays are blocked), weekly allergy re-confirmation, Report a problem, Share/Import recipe (text only, nothing is uploaded), system fonts only (no Google Fonts), credits and takedown contact. Run a screen-reader and contrast check before launch.
 2. Add a real contact address for safety reports, and a way to report a bad or unsafe recipe.
 3. If you add accounts, sync, analytics, payments or AI features, update the privacy section and get consent as required (GDPR, CCPA, Washington My Health My Data, etc.).
 4. Get a registered dietitian to review the health-condition, pregnancy and cycle logic, and consider product-liability / professional-liability insurance.

@@ -1,6 +1,6 @@
 // Network-first for the app files (so updates show up), cache fallback for offline use.
-const CACHE = "wuts-cooking-v13";
-const FILES = ["./", "./index.html", "./styles.css", "./legal.js", "./data.js", "./data2.js", "./engine.js", "./calc.js", "./nutty.js", "./app.js", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/wut-squirrel.webp"];
+const CACHE = "wuts-cooking-v14";
+const FILES = ["./", "./index.html", "./styles.css", "./legal.js", "./data.js", "./data2.js", "./engine.js", "./calc.js", "./nutty.js", "./app.js", "./manifest.json", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
